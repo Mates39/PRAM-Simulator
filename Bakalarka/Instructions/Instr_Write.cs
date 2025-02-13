@@ -1,0 +1,23 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Bakalarka.Instructions
+{
+    public class Instr_Write : IInstruction
+    {
+        public Instr_Write(int address, int value) { this.value = value; this.address = address; }
+        public int address;
+        public int value;
+
+        public int InstructionPointer { get; set; }
+
+        public int Execute()
+        {
+            return 1;
+        }
+    }
+}
+
