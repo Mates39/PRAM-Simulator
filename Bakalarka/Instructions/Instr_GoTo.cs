@@ -11,7 +11,7 @@ namespace Bakalarka.Instructions
         public Instr_GoTo(int address) { this.address = address; }
         public int InstructionPointer { get; set; }
         public int address;
-        public int Execute()
+        public int Execute(int procID)
         {
             return address;
         }

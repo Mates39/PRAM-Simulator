@@ -14,9 +14,9 @@ namespace Bakalarka.Instructions
         public IExpresion expresion;
         public Instr_WriteExprToMem(MemoryGateway gat, int IP, IExpresion expr) { gateway = gat; InstructionPointer = IP; expresion = expr; }
 
-        public int Execute()
+        public int Execute(int procID)
         {
-            gateway.Write(expresion.Result());
+            gateway.Write(expresion.Result(), procID);
             return InstructionPointer + 1;
         }
     }

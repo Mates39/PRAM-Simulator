@@ -9,6 +9,6 @@ namespace Bakalarka.Instructions
     internal interface IInstruction
     {
         int InstructionPointer { get; set; }
-        int Execute();
+        int Execute(int procID);
     }
 }

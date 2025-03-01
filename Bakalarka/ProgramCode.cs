@@ -9,6 +9,9 @@ namespace Bakalarka
 {
     internal class ProgramCode
     {
+        public ProgramCode()
+        {
+        }
         public List<IInstruction> instructions = new List<IInstruction>();
     }
 }

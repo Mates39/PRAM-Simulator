@@ -8,25 +8,25 @@ namespace Bakalarka
 {
     internal class MemoryGateway
     {
-        private List<int> memory;
+        private IGateway gateway;
         private int index;
-        public MemoryGateway(List<int> mem, int ind) { this.memory = mem; this.index = ind; }
+        public MemoryGateway(IGateway gat, int ind) { this.gateway = gat; this.index = ind; }
 
         public int Read()
         {
-            return memory[index];
+            return gateway.Read(index);
         }
         public int Read(int index)
         {
-            return memory[index];
+            return gateway.Read(index);
         }
-        public void Write(int value)
+        public void Write(int value, int procID)
         {
-            memory[index] = value;
+            gateway.Write(index, value, procID);
         }
-        public void Write(int index, int value)
+        public void Write(int index, int value, int procID)
         {
-            memory[index] = value;
+            gateway.Write(index, value, procID);
         }
     }
 }

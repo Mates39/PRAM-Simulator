@@ -14,7 +14,7 @@ namespace Bakalarka.Instructions
         public int InstructionPointer { get; set; }
         public Instr_IfGoTo(IExpresion expr, int address, int IP) { expresion = expr; this.address = address; InstructionPointer = IP; }
 
-        public int Execute()
+        public int Execute(int procID)
         {
             if(expresion.Result() == 1)
             {

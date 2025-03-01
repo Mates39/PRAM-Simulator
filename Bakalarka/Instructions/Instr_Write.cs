@@ -14,7 +14,7 @@ namespace Bakalarka.Instructions
 
         public int InstructionPointer { get; set; }
 
-        public int Execute()
+        public int Execute(int procID)
         {
             return 1;
         }
