@@ -6,42 +6,53 @@ using System.Threading.Tasks;
 
 namespace Bakalarka
 {
-    internal class Processor
+    public class Processor
     {
-        public int id;
+        public int Id { get; set; }
         public int InstructionPointer = 0;
-        public ProgramCode program;
-        public Memory localMemory;
-        public IGateway gateway;
+        public bool Running = true;
+        internal ProgramCode Program { get; set; }
+        public Memory LocalMemory { get; set; }
+        internal IGateway Gateway { get; set; }
         public Processor(int id, ProgramCode program, IGateway gateway)
         {
-            this.id = id;
-            this.program = program;
-            localMemory = new Memory();
-            this.gateway = gateway;
+            this.Id = id;
+            this.Program = program;
+            this.LocalMemory = new Memory();
+            this.Gateway = gateway;
 
-            gateway.memory = localMemory;
+            Gateway.memory = LocalMemory;
+        }
+        public Processor(int id, IGateway gateway)
+        {
+            this.Id = id;
+            this.LocalMemory = new Memory();
+            Gateway = gateway;
+
+            Gateway.memory = LocalMemory;
         }
         public void ExecuteNextInstruction()
         {
             if (InstructionPointer >= 0)
             {
-                InstructionPointer = program.instructions[InstructionPointer].Execute(id);
+                InstructionPointer = Program.instructions[InstructionPointer].Execute(Id);
+                if (InstructionPointer < 0)
+                    Running = false;
             }
         }
 
         public void Info()
         {
-            Console.WriteLine("Processor ID: " + id);
+            Console.WriteLine("Processor ID: " + Id);
             Console.WriteLine("Instruction Pointer: " + InstructionPointer);
             if(InstructionPointer >= 0)
-                Console.WriteLine("Instruction: " + program.instructions[InstructionPointer]);
+                Console.WriteLine("Instruction: " + Program.instructions[InstructionPointer]);
             else
                 Console.WriteLine("Instruction: HALT");
             Console.Write("Local Memory: ");
-            foreach (int i in localMemory.memory)
+            foreach (MemCell i in LocalMemory.memory)
             {
-                Console.Write(i + " ");
+                Console.Write(i.Value + " ");
             }
             Console.WriteLine();
 

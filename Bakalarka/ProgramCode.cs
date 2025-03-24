@@ -7,11 +7,20 @@ using Bakalarka.Instructions;
 
 namespace Bakalarka
 {
-    internal class ProgramCode
+    public class ProgramCode
     {
         public ProgramCode()
         {
         }
         public List<IInstruction> instructions = new List<IInstruction>();
+        public ProgramCode Duplicate(LocalMemoryGateway lmg)
+        {
+            ProgramCode newProgram = new ProgramCode();
+            foreach (IInstruction i in instructions)
+            {
+                newProgram.instructions.Add(i.Duplicate(lmg));
+            }
+            return newProgram;
+        }
     }
 }

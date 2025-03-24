@@ -25,5 +25,6 @@ namespace Bakalarka.Expresions
     public interface IExpresion
     {
         int Result();
+        IExpresion Duplicate(LocalMemoryGateway localGateway);
     }
 }

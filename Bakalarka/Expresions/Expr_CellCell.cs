@@ -20,5 +20,9 @@ namespace Bakalarka.Expresions
             if (op == Operator.DIV) return left.Read() / right.Read();
             else throw new Exception("expression fail");
         }
+        public IExpresion Duplicate(LocalMemoryGateway localGateway)
+        {
+            return new Expr_CellCell(left.Duplicate(localGateway), op, right.Duplicate(localGateway));
+        }
     }
 }

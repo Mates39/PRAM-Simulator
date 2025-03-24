@@ -6,16 +6,16 @@ using System.Threading.Tasks;
 
 namespace Bakalarka
 {
-    internal interface IGateway
+    public interface IGateway
     {
         Memory memory { get; set; }
         int Read(int index)
         {
-            return memory.memory[index];
+            return memory.memory[index].Value;
         }
         void Write(int index, int value, int procID)
         {
-            memory.TryWrite(new MemoryAccess() { processorID = procID, memoryIndex = index, value = value });
+            memory.TryWrite(new MemoryAccess(this, procID, index, value ));
         }
     }
 }

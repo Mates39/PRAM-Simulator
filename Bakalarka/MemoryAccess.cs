@@ -6,10 +6,18 @@ using System.Threading.Tasks;
 
 namespace Bakalarka
 {
-    internal class MemoryAccess
+    public class MemoryAccess
     {
+        public IGateway gateway;
         public int processorID;
         public int memoryIndex;
         public int value;
+        public MemoryAccess(IGateway gat, int procID, int memIndex, int val)
+        {
+            this.gateway = gat;
+            this.processorID = procID;
+            this.memoryIndex = memIndex;
+            this.value = val;
+        }
     }
 }

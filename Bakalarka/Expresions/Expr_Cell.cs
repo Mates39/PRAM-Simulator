@@ -11,5 +11,9 @@ namespace Bakalarka.Expresions
         MemoryGateway gateway;
         public Expr_Cell(MemoryGateway gat) { this.gateway = gat; }
         public int Result() { return gateway.Read(); }
+        public IExpresion Duplicate(LocalMemoryGateway localGateway) 
+        { 
+            return new Expr_Cell(gateway.Duplicate(localGateway));
+        }
     }
 }

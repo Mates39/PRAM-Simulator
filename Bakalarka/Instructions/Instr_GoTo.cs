@@ -15,5 +15,9 @@ namespace Bakalarka.Instructions
         {
             return address;
         }
+        public IInstruction Duplicate(LocalMemoryGateway localGateway)
+        {
+            return new Instr_GoTo(address);
+        }
     }
 }

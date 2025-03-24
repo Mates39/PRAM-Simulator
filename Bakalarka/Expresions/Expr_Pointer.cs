@@ -9,10 +9,15 @@ namespace Bakalarka.Expresions
     internal class Expr_Pointer : IExpresion
     {
         private MemoryGateway gateway;
-        public Expr_Pointer(MemoryGateway gat) { this.gateway = gat; }
+        private Expr_Cell cell;
+        public Expr_Pointer(MemoryGateway gat, Expr_Cell cell) { this.gateway = gat; this.cell = cell; }
         public int Result()
         { 
-            return gateway.Read(gateway.Read());
+            return gateway.Read(cell.Result());
+        }
+        public IExpresion Duplicate(LocalMemoryGateway localGateway)
+        {
+            return new Expr_Pointer(gateway.Duplicate(localGateway), (Expr_Cell)cell.Duplicate(localGateway));
         }
     }
 }

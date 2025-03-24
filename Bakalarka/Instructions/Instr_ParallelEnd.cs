@@ -6,18 +6,22 @@ using System.Threading.Tasks;
 
 namespace Bakalarka.Instructions
 {
-    internal class Instr_NoOp : IInstruction
+    internal class Instr_ParallelEnd : IInstruction
     {
         public int InstructionPointer { get; set; }
-        public Instr_NoOp(int IP) { InstructionPointer = IP; }
-
-        public int Execute(int procID)
+        public PRAM pram { get; set; }
+        public Instr_ParallelEnd(int instructionPointer, PRAM pram)
+        {
+            InstructionPointer = instructionPointer;
+            this.pram = pram;
+        }
+        public int Execute(int procCount)
         {
             return InstructionPointer + 1;
         }
         public IInstruction Duplicate(LocalMemoryGateway localGateway)
         {
-            return new Instr_NoOp(InstructionPointer);
+            return new Instr_ParallelEnd(InstructionPointer, pram);
         }
     }
 }

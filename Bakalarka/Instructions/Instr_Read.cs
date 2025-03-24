@@ -16,5 +16,10 @@ namespace Bakalarka.Instructions
         {
             return 1;
         }
+
+        public IInstruction Duplicate(LocalMemoryGateway localGateway)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -28,5 +28,12 @@ namespace Bakalarka
         {
             gateway.Write(index, value, procID);
         }
+        public MemoryGateway Duplicate(LocalMemoryGateway localGateway)
+        {
+            if (gateway is SharedMemoryGateway)
+                return new MemoryGateway(gateway, index);
+            else
+                return new MemoryGateway(localGateway, index);
+        }
     }
 }

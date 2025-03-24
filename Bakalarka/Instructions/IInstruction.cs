@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 
 namespace Bakalarka.Instructions
 {
-    internal interface IInstruction
+    public interface IInstruction
     {
         int InstructionPointer { get; set; }
         int Execute(int procID);
+        IInstruction Duplicate(LocalMemoryGateway localGateway);
     }
 }

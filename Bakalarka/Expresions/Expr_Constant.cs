@@ -18,5 +18,9 @@ namespace Bakalarka.Expresions
         {
             return value;
         }
+        public IExpresion Duplicate(LocalMemoryGateway localGateway)
+        {
+            return new Expr_Constant(value);
+        }   
     }
 }

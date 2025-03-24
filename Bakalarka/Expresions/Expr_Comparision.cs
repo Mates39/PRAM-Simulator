@@ -38,5 +38,16 @@ namespace Bakalarka.Expresions
                 throw new Exception("Unknown comparision");
             }
         }
+        public IExpresion Duplicate(LocalMemoryGateway localGateway)
+        {
+            if(rightCell != null)
+            {
+                return new Expr_Comparision(left.Duplicate(localGateway), comparision, rightCell.Duplicate(localGateway));
+            }
+            else
+            {
+                return new Expr_Comparision(left.Duplicate(localGateway), comparision, (int)rightValue);
+            }
+        }
     }
 }

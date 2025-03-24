@@ -19,5 +19,9 @@ namespace Bakalarka.Instructions
             gateway.Write(expresion.Result(), procID);
             return InstructionPointer + 1;
         }
+        public IInstruction Duplicate(LocalMemoryGateway localGateway)
+        {
+            return new Instr_WriteExprToMem(gateway.Duplicate(localGateway), InstructionPointer, expresion.Duplicate(localGateway));
+        }
     }
 }

@@ -22,5 +22,9 @@ namespace Bakalarka.Instructions
             }
             else return InstructionPointer + 1;
         }
+        public IInstruction Duplicate(LocalMemoryGateway localGateway)
+        {
+            return new Instr_IfGoTo(expresion.Duplicate(localGateway), address, InstructionPointer);
+        }
     }
 }
