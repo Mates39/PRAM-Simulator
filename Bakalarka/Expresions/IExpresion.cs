@@ -11,7 +11,9 @@ namespace Bakalarka.Expresions
         ADD,
         SUB,
         MUL,
-        DIV
+        DIV,
+        MOD,
+
     }
     public enum Comparision
     {

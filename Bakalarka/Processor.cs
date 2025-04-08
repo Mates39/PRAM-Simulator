@@ -11,24 +11,28 @@ namespace Bakalarka
         public int Id { get; set; }
         public int InstructionPointer = 0;
         public bool Running = true;
-        internal ProgramCode Program { get; set; }
+        public ProgramCode Program { get; set; }
         public Memory LocalMemory { get; set; }
-        internal IGateway Gateway { get; set; }
-        public Processor(int id, ProgramCode program, IGateway gateway)
+        public Dictionary<string, int> Jumps { get; set; }
+        internal LocalMemoryGateway Gateway { get; set; }
+        public Processor(int id, ProgramCode program, LocalMemoryGateway gateway)
         {
             this.Id = id;
             this.Program = program;
             this.LocalMemory = new Memory();
+            this.Jumps = new Dictionary<string, int>();
             this.Gateway = gateway;
-
+            Gateway.ParralelProcIndex = Id;
             Gateway.memory = LocalMemory;
         }
-        public Processor(int id, IGateway gateway)
+        public Processor(int id, LocalMemoryGateway gateway)
         {
             this.Id = id;
             this.LocalMemory = new Memory();
+            this.Jumps = new Dictionary<string, int>();
+            this.Program = new ProgramCode();
             Gateway = gateway;
-
+            Gateway.ParralelProcIndex = Id;
             Gateway.memory = LocalMemory;
         }
         public void ExecuteNextInstruction()

@@ -9,22 +9,24 @@ namespace Bakalarka.Instructions
 {
     internal class Instr_IfGoTo : IInstruction
     {
-        private IExpresion expresion;
-        private int address;
+        private IExpresion ExprCondition { get; set; }
+        private IExpresion ExprAddress { get; set; }
+        private int Address;
         public int InstructionPointer { get; set; }
-        public Instr_IfGoTo(IExpresion expr, int address, int IP) { expresion = expr; this.address = address; InstructionPointer = IP; }
+        public int CodeLineIndex { get; set; }
+        public Instr_IfGoTo(IExpresion exprCondition, IExpresion exprAddress, int IP, int codeLineIndex) { ExprCondition = exprCondition; ExprAddress = exprAddress; InstructionPointer = IP; CodeLineIndex = codeLineIndex; }
 
         public int Execute(int procID)
         {
-            if(expresion.Result() == 1)
+            if(ExprCondition.Result() == 1)
             {
-                return address;
+                return ExprAddress.Result();
             }
             else return InstructionPointer + 1;
         }
         public IInstruction Duplicate(LocalMemoryGateway localGateway)
         {
-            return new Instr_IfGoTo(expresion.Duplicate(localGateway), address, InstructionPointer);
+            return new Instr_IfGoTo(ExprCondition.Duplicate(localGateway), ExprAddress.Duplicate(localGateway), InstructionPointer, CodeLineIndex);
         }
     }
 }

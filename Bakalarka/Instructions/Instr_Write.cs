@@ -13,7 +13,7 @@ namespace Bakalarka.Instructions
         public int value;
 
         public int InstructionPointer { get; set; }
-
+        public int CodeLineIndex { get; set; }
         public int Execute(int procID)
         {
             return 1;

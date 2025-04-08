@@ -18,6 +18,7 @@ namespace Bakalarka.Expresions
             if (op == Operator.SUB) return gateway.Read() - value;
             if (op == Operator.MUL) return gateway.Read() * value;
             if (op == Operator.DIV) return gateway.Read() / value;
+            if (op == Operator.MOD) return gateway.Read() % value;
             else throw new Exception("expression fail");
         }
         public IExpresion Duplicate(LocalMemoryGateway localGateway)

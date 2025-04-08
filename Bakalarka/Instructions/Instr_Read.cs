@@ -10,6 +10,7 @@ namespace Bakalarka.Instructions
     {
         public Instr_Read(int address) { this.address = address; }
         public int InstructionPointer { get; set; }
+        public int CodeLineIndex { get; set; }
         public int address;
         public int value;
         public int Execute(int procID)

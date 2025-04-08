@@ -9,6 +9,7 @@ namespace Bakalarka.Instructions
     internal class Instr_NoOp : IInstruction
     {
         public int InstructionPointer { get; set; }
+        public int CodeLineIndex { get; set; }
         public Instr_NoOp(int IP) { InstructionPointer = IP; }
 
         public int Execute(int procID)

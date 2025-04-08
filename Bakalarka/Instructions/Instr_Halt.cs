@@ -9,7 +9,8 @@ namespace Bakalarka.Instructions
     internal class Instr_Halt : IInstruction
     {
         public int InstructionPointer { get; set; }
-        public Instr_Halt(int IP) { InstructionPointer = IP; }
+        public int CodeLineIndex { get; set; }
+        public Instr_Halt(int IP, int codeLineIndex) { InstructionPointer = IP; CodeLineIndex = codeLineIndex; }
         public int Execute(int procID)
         {
             return -1;
@@ -17,7 +18,7 @@ namespace Bakalarka.Instructions
 
         public IInstruction Duplicate(LocalMemoryGateway localGateway)
         {
-            return new Instr_Halt(InstructionPointer);
+            return new Instr_Halt(InstructionPointer, CodeLineIndex);
         }
     }
 }

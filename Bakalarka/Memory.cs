@@ -27,6 +27,13 @@ namespace Bakalarka
         {
             if(ma.gateway is LocalMemoryGateway)
             {
+                if(ma.memoryIndex >= memory.Count)
+                {
+                    for (int i = memory.Count; i <= ma.memoryIndex; i++)
+                    {
+                        memory.Add(new MemCell(i, 0));
+                    }
+                }
                 var item = memory.FirstOrDefault(i => i.Index == ma.memoryIndex);
                 if (item != null) { item.Value = ma.value; }
             }
@@ -42,6 +49,13 @@ namespace Bakalarka
                 {
                     if (item.Count() > 1) { MemoryAccesses.Clear(); return false; }
                     var it = item.First();
+                    if (it.memoryIndex >= memory.Count)
+                    {
+                        for (int i = memory.Count; i <= it.memoryIndex; i++)
+                        {
+                            memory.Add(new MemCell(i, 0));
+                        }
+                    }
                     var mem = memory.FirstOrDefault(x => x.Index == it.memoryIndex);
                     if (mem != null) { mem.Value = it.value; }
                 }
@@ -55,6 +69,13 @@ namespace Bakalarka
                 {
                     int random = new Random().Next(0, item.Count());
                     var it = item.Where(x => x.processorID == random).First();
+                    if (it.memoryIndex >= memory.Count)
+                    {
+                        for (int i = memory.Count; i <= it.memoryIndex; i++)
+                        {
+                            memory.Add(new MemCell(i, 0));
+                        }
+                    }
                     var mem = memory.FirstOrDefault(x => x.Index == it.memoryIndex);
                     if (mem != null) { mem.Value = it.value; }
                 }
@@ -67,6 +88,13 @@ namespace Bakalarka
                 foreach (var item in accesses)
                 {
                     var it = item.OrderBy(x => x.processorID).First();
+                    if (it.memoryIndex >= memory.Count)
+                    {
+                        for (int i = memory.Count; i <= it.memoryIndex; i++)
+                        {
+                            memory.Add(new MemCell(i, 0));
+                        }
+                    }
                     var mem = memory.FirstOrDefault(x => x.Index == it.memoryIndex);
                     if (mem != null) { mem.Value = it.value; }
                 }

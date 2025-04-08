@@ -10,16 +10,18 @@ namespace Bakalarka.Instructions
     internal class Instr_WriteExprToPointerMultiMem : IInstruction
     {
         public int InstructionPointer { get; set; }
+        public int CodeLineIndex { get; set; }
         public MemoryGateway Gateway { get; set; }
         public IExpresion ExprAddress { get; set; }
         public IExpresion ExprValue { get; set; }
         public PRAM pram { get; set; }
-        public Instr_WriteExprToPointerMultiMem(MemoryGateway gat, int IP, IExpresion exprAddress, IExpresion exprValue)
+        public Instr_WriteExprToPointerMultiMem(MemoryGateway gat, int IP, IExpresion exprAddress, IExpresion exprValue, int codeLineIndex)
         {
             InstructionPointer = IP;
             this.Gateway = gat;
             this.ExprAddress = exprAddress;
             this.ExprValue = exprValue;
+            CodeLineIndex = codeLineIndex;
         }
         public int Execute(int id)
         {
@@ -28,7 +30,7 @@ namespace Bakalarka.Instructions
         }
         public IInstruction Duplicate(LocalMemoryGateway localGateway)
         {
-            return new Instr_WriteExprToPointerMultiMem(Gateway.Duplicate(localGateway), InstructionPointer, ExprAddress.Duplicate(localGateway), ExprValue.Duplicate(localGateway));
+            return new Instr_WriteExprToPointerMultiMem(Gateway.Duplicate(localGateway), InstructionPointer, ExprAddress.Duplicate(localGateway), ExprValue.Duplicate(localGateway), CodeLineIndex);
         }
     }
 }

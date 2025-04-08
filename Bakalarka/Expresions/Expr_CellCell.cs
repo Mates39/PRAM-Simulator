@@ -18,6 +18,7 @@ namespace Bakalarka.Expresions
             if (op == Operator.SUB) return left.Read() - right.Read();
             if (op == Operator.MUL) return left.Read() * right.Read();
             if (op == Operator.DIV) return left.Read() / right.Read();
+            if(op == Operator.MOD) return left.Read()   % right.Read();
             else throw new Exception("expression fail");
         }
         public IExpresion Duplicate(LocalMemoryGateway localGateway)

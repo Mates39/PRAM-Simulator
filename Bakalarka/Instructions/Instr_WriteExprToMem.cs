@@ -11,8 +11,9 @@ namespace Bakalarka.Instructions
     {
         private MemoryGateway gateway;
         public int InstructionPointer { get; set; }
+        public int CodeLineIndex { get; set; }
         public IExpresion expresion;
-        public Instr_WriteExprToMem(MemoryGateway gat, int IP, IExpresion expr) { gateway = gat; InstructionPointer = IP; expresion = expr; }
+        public Instr_WriteExprToMem(MemoryGateway gat, int IP, IExpresion expr, int codeLineIndex) { gateway = gat; InstructionPointer = IP; expresion = expr; CodeLineIndex = codeLineIndex; }
 
         public int Execute(int procID)
         {
@@ -21,7 +22,7 @@ namespace Bakalarka.Instructions
         }
         public IInstruction Duplicate(LocalMemoryGateway localGateway)
         {
-            return new Instr_WriteExprToMem(gateway.Duplicate(localGateway), InstructionPointer, expresion.Duplicate(localGateway));
+            return new Instr_WriteExprToMem(gateway.Duplicate(localGateway), InstructionPointer, expresion.Duplicate(localGateway), CodeLineIndex);
         }
     }
 }

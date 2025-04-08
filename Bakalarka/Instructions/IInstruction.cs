@@ -9,6 +9,7 @@ namespace Bakalarka.Instructions
     public interface IInstruction
     {
         int InstructionPointer { get; set; }
+        int CodeLineIndex { get; set; }
         int Execute(int procID);
         IInstruction Duplicate(LocalMemoryGateway localGateway);
     }

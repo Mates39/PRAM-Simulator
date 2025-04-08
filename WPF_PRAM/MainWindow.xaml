@@ -5,10 +5,23 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WPF_PRAM"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid RenderTransformOrigin="0.5,0.5" Margin="0,10,-94,13">
-
-        <ListView x:Name="SharedMemoryView" ItemsSource="{Binding sharedMemory.memory}" Margin="24,64,772,82" >
+        Title="MainWindow" Height="786" Width="1241">
+    <Grid RenderTransformOrigin="0.497,0.448" Margin="0,10,9,13">
+        <Grid.RenderTransform>
+            <TransformGroup>
+                <ScaleTransform/>
+                <SkewTransform/>
+                <RotateTransform Angle="0.275"/>
+                <TranslateTransform X="0.186" Y="-0.015"/>
+            </TransformGroup>
+        </Grid.RenderTransform>
+        <Label x:Name="Label" Content="Code" HorizontalAlignment="Left" Margin="61,90,982,63" VerticalAlignment="Top" Width="188" Height="26"/>
+        <Border BorderBrush="Black" BorderThickness="1" Height="590" Width="188" Margin="61,90,982,63">
+            <RichTextBox x:Name="TextBox_Code" Margin="2,29,1,0"  >
+            </RichTextBox>
+        </Border>
+        <Button x:Name="Button_Compile" Content="Compile" HorizontalAlignment="Left" Margin="267,654,0,0" VerticalAlignment="Top" Width="75" Click="Button_Compile_Click"/>
+        <ListView x:Name="SharedMemoryView" ItemsSource="{Binding sharedMemory.memory}" Margin="392,88,717,58" >
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Index" DisplayMemberBinding="{Binding Index}"/>
@@ -22,7 +35,7 @@
                 </GridView>
             </ListView.View>
         </ListView>
-        <ListView x:Name="LocalMemoryView" ItemsSource="{Binding Processors[2].LocalMemory.memory}" Margin="436,64,374,82" >
+        <ListView x:Name="LocalMemoryView1" ItemsSource="{Binding Processors[0].LocalMemory.memory}" Margin="652,100,457,45" >
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Index" DisplayMemberBinding="{Binding Index}"/>
@@ -36,7 +49,7 @@
                 </GridView>
             </ListView.View>
         </ListView>
-        <ListView x:Name="LocalMemoryView2" ItemsSource="{Binding Processors[3].LocalMemory.memory}" Margin="554,64,248,82" >
+        <ListView x:Name="LocalMemoryView2" ItemsSource="{Binding Processors[1].LocalMemory.memory}" Margin="782,101,327,45" >
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Index" DisplayMemberBinding="{Binding Index}"/>
@@ -50,9 +63,7 @@
                 </GridView>
             </ListView.View>
         </ListView>
-        <Button x:Name="Button" Content="Button" HorizontalAlignment="Left" Margin="47,375,0,0" VerticalAlignment="Top" Width="75" Click="Button_Click"/>
-        <Button x:Name="Button_Add" Content="Add" HorizontalAlignment="Left" Margin="47,350,0,0" VerticalAlignment="Top" Width="75" Click="Add_Click"/>
-        <ListView x:Name="LocalMemoryView_Copy" ItemsSource="{Binding Processors[1].LocalMemory.memory}" Margin="318,64,486,82" >
+        <ListView x:Name="LocalMemoryView3" ItemsSource="{Binding Processors[2].LocalMemory.memory}" Margin="911,104,198,42" >
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Index" DisplayMemberBinding="{Binding Index}"/>
@@ -66,7 +77,7 @@
                 </GridView>
             </ListView.View>
         </ListView>
-        <ListView x:Name="LocalMemoryView_Copy1" ItemsSource="{Binding Processors[0].LocalMemory.memory}" Margin="200,64,601,82" >
+        <ListView x:Name="LocalMemoryView4" ItemsSource="{Binding Processors[3].LocalMemory.memory}" Margin="1041,101,68,45" >
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Index" DisplayMemberBinding="{Binding Index}"/>
@@ -80,5 +91,8 @@
                 </GridView>
             </ListView.View>
         </ListView>
+        <Button x:Name="Button" Content="Next" HorizontalAlignment="Left" Margin="268,618,0,0" VerticalAlignment="Top" Width="75" Click="Button_Next_Click"/>
+        <Button x:Name="Button_Add" Content="Add" HorizontalAlignment="Left" Margin="533,622,0,0" VerticalAlignment="Top" Width="75" Click="Button_Add_Click"/>
+        <Button x:Name="Button_Remove" Content="Remove" HorizontalAlignment="Left" Margin="532,659,0,0" VerticalAlignment="Top" Width="75" Click="Button_Remove_Click"/>
     </Grid>
 </Window>
