@@ -10,6 +10,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WPF_PRAM", "WPF_PRAM\WPF_PR
 		{C04012B4-C24C-4479-BEB3-A5D1E9DEAEBA} = {C04012B4-C24C-4479-BEB3-A5D1E9DEAEBA}
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PRAM_Simulator", "PRAM_Simulator\PRAM_Simulator\PRAM_Simulator.csproj", "{54E05685-5239-407B-8FD7-6090F5986B81}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C04012B4-C24C-4479-BEB3-A5D1E9DEAEBA} = {C04012B4-C24C-4479-BEB3-A5D1E9DEAEBA}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PramSimulator_WebApp", "PramSimulator_WebApp\PramSimulator_WebApp\PramSimulator_WebApp.csproj", "{5B6683CB-448B-4944-9CDD-58614A899655}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C04012B4-C24C-4479-BEB3-A5D1E9DEAEBA} = {C04012B4-C24C-4479-BEB3-A5D1E9DEAEBA}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,6 +34,14 @@ Global
 		{DB2CA0E2-91FD-4AEE-8925-F6B4148395A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DB2CA0E2-91FD-4AEE-8925-F6B4148395A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DB2CA0E2-91FD-4AEE-8925-F6B4148395A7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{54E05685-5239-407B-8FD7-6090F5986B81}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{54E05685-5239-407B-8FD7-6090F5986B81}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{54E05685-5239-407B-8FD7-6090F5986B81}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{54E05685-5239-407B-8FD7-6090F5986B81}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5B6683CB-448B-4944-9CDD-58614A899655}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B6683CB-448B-4944-9CDD-58614A899655}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B6683CB-448B-4944-9CDD-58614A899655}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B6683CB-448B-4944-9CDD-58614A899655}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

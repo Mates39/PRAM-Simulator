@@ -1,0 +1,81 @@
+﻿@page "/home"
+@using Bakalarka
+@inject PRAM pram
+@inject NavigationManager Navigation
+
+<h1>Pram Simulator</h1>
+<p> Compiled: @Compiled</p>
+<textarea @bind="Code" rows="10" cols="40" placeholder="Napiš kod..."></textarea>
+
+<table class="SharedMemoryView">
+	<thead>
+		<tr>
+			<th class="MemoryColl">Index</th>
+			<th class="abc">Value</th>
+		</tr>
+	</thead>
+	<tbody>
+		@foreach (var item in pram.sharedMemory.memory)
+		{
+			<tr>
+				<td>@item.Index</td>
+				<td>@item.Value</td>
+			</tr>
+		}
+	</tbody>
+	</table>
+	<button class="btn btn-primary" @onclick="NextStep">NExt</button>
+	<button class="btn btn-primary" @onclick="Compile">Compile</button>
+
+
+	@if (!string.IsNullOrEmpty(hlaseni))
+	{
+		<div class="alert alert-success">@num</div>
+	}
+
+
+
+
+@code {
+	protected override async Task OnInitializedAsync()
+    {
+        await Refresh();
+    }
+	private async Task Refresh()
+    {
+		pram.Restart();
+    }
+
+	private int num = 0;
+	private string hlaseni;
+	private string Code = ":cycle\r\nS0 := S0 + 1\r\nif S0 > 3 goto :end\r\ngoto :cycle\r\n:end\r\nhalt";
+	private bool Compiled;
+	private void NextStep()
+	{
+		if(pram.Compiled)
+        {
+            if (pram.ParallelExecution)
+            {
+                int i = pram.ExecuteNextParallelStep();
+            }
+            else
+            {
+                int i = pram.ExecuteNextInstruction();
+				if(pram.ParallelExecution == true)
+					Navigation.NavigateTo("/parallel");
+            }
+        }
+		StateHasChanged();
+	}
+	private void Compile()
+	{
+		//Code = ":cycle\r\nS0 := S0 + 1\r\nif S0 > 3 goto :end\r\ngoto :cycle\r\n:end\r\nhalt";
+		pram.CodeCompiler.Compile(pram, Code);
+		pram.sharedMemory.memory.Add(new MemCell(0, 0));
+		num = pram.MainProgram.instructions.Count;
+		hlaseni = "Compiled";
+		Compiled = pram.Compiled;
+		InvokeAsync(StateHasChanged);
+	}
+
+}

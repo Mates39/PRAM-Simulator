@@ -269,6 +269,7 @@ namespace Bakalarka
                     throw new NotImplementedException();
             }
             pram.ParallelProgram = proc.Program;
+            pram.Compiled = true;
         }
     }
 }

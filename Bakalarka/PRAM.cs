@@ -136,8 +136,11 @@ namespace Bakalarka
             ParallelExecution = false;
             Processors.Clear();
             Processors.Add(new Processor(0, new LocalMemoryGateway()));
+            Processors[0].LocalMemory.memory.Add(new MemCell(0, 0));
+            Processors[0].LocalMemory.memory.Add(new MemCell(1, 0));
             Jumps.Clear();
             MainProgram.instructions.Clear();
+            sharedMemory.memory.Clear();
 
         }
         public void Test()

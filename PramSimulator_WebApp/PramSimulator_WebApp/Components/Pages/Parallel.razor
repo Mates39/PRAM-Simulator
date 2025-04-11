@@ -1,0 +1,50 @@
+﻿@page "/parallel"
+@rendermode InteractiveServer
+@using Bakalarka
+@inject PRAM pram
+@inject NavigationManager Navigation
+
+<h3>Parallel</h3>
+<p>Parallel: @pram.ParallelExecution</p>
+
+
+@foreach(var proc in pram.ActiveProcessors)
+{
+	<table class="SharedMemoryView">
+		<thead>
+			<tr>
+				<th class="MemoryColl">Index</th>
+				<th class="abc">Value</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var item in proc.LocalMemory.memory)
+			{
+				<tr>
+					<td>@item.Index</td>
+					<td>@item.Value</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+<button class="btn btn-primary" @onclick="NextStep">NExt</button>
+
+@code {
+	private void NextStep()
+	{
+		if (pram.Compiled)
+		{
+			if (pram.ParallelExecution)
+			{
+				int i = pram.ExecuteNextParallelStep();
+				if(!pram.ParallelExecution)
+					Navigation.NavigateTo("/home");
+			}
+			else
+			{
+				pram.ExecuteNextInstruction();
+			}
+		}
+	}
+}
