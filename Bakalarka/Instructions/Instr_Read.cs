@@ -10,6 +10,7 @@ namespace Bakalarka.Instructions
     {
         public Instr_Read(int address) { this.address = address; }
         public int InstructionPointer { get; set; }
+        public string InstructionString { get; set; }
         public int CodeLineIndex { get; set; }
         public int address;
         public int value;

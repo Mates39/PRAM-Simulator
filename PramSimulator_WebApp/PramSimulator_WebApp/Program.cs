@@ -1,6 +1,7 @@
 using PramSimulator_WebApp.Components;
 using Bakalarka;
 using PramSimulator_WebApp.Components.Pages;
+using PramSimulator_WebApp.Components.Services;
 
 namespace PramSimulator_WebApp
 {
@@ -15,6 +16,7 @@ namespace PramSimulator_WebApp
                 .AddInteractiveServerComponents();
             builder.Services.AddSingleton<PRAM>();
             builder.Services.AddSingleton<Home>();
+            builder.Services.AddSingleton<CodeService>();
 
             var app = builder.Build();
 

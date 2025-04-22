@@ -11,6 +11,7 @@ namespace Bakalarka.Instructions
         int InstructionPointer { get; set; }
         int CodeLineIndex { get; set; }
         int Execute(int procID);
+        string InstructionString { get; set; }
         IInstruction Duplicate(LocalMemoryGateway localGateway);
     }
 }

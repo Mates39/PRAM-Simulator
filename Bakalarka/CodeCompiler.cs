@@ -8,11 +8,16 @@ using System.Linq;
 using Bakalarka.Expresions;
 using Bakalarka.Instructions;
 using System.Net.Http.Headers;
+using System.Collections.ObjectModel;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Components.Forms;
 
 namespace Bakalarka
 {
     public class CodeCompiler
     {
+        public Regex comment = new Regex(@"^#(.+)$");
+        public Regex emptyLine = new Regex(@"^\s*$");
         public Regex instr_WriteExprToMem = new Regex(@"^([SL]\d+)\s:=\s(.+)$");
         public Regex instr_WriteExprToPointer = new Regex(@"^([SL])\[(.+)]\s:=\s(.*)$");
         public Regex instr_ParallelStart = new Regex(@"^(parallelStart)\s(.+)$");
@@ -25,7 +30,7 @@ namespace Bakalarka
         public Regex expr_CellCell = new Regex(@"^([SL]\d+)\s([\+\-\*\/\%])\s([SL]\d+)$");
         public Regex expr_CellConstant = new Regex(@"^([SL]\d+)\s([\+\-\*\/\%])\s(\d+)$");
         public Regex expr_Constant = new Regex(@"^\d+$");
-        public Regex expr_Pointer = new Regex(@"^([SL])\[([SL]\d+)\]$");
+        public Regex expr_Pointer = new Regex(@"^([SL])\[(.+)\]$");
         public Regex expr_ProcIndex = new Regex(@"^\{ind\}$");
         public Regex expr_Comparision = new Regex(@"^([SL]\d+)\s(==|!=|<=|>=|<|>)\s([SL]\d+|\d+)$");
 
@@ -90,9 +95,9 @@ namespace Bakalarka
                 IGateway gateway1;
                 IGateway gateway2;
                 gateway1 = match.Groups[1].Value[0] == 'S' ? pram.sharedMemoryGateway : lmg;
-                gateway2 = match.Groups[2].Value[0] == 'S' ? pram.sharedMemoryGateway : lmg;
-                int gatewayIndex = int.Parse(match.Groups[2].Value.Substring(1));
-                return new Expr_Pointer(new MemoryGateway(gateway1, 0), new Expr_Cell(new MemoryGateway(gateway2, gatewayIndex)));
+                IExpresion expr = IdentifyExpression(pram, lmg, match.Groups[2].Value);
+                //int gatewayIndex = int.Parse(match.Groups[2].Value.Substring(1));
+                return new Expr_Pointer(new MemoryGateway(gateway1, 0), expr);
             }
             else if (expr_ProcIndex.IsMatch(input))
             {
@@ -143,19 +148,31 @@ namespace Bakalarka
             for (int i = 0; i < lines.Count(); i++)
             {
                 lines[i] = lines[i].Trim();
+                if (comment.IsMatch(lines[i]))
+                {
+                    continue;
+                }
+                if (emptyLine.IsMatch(lines[i]))
+                {
+                    continue;
+                }
                 if (instr_ParallelStart.IsMatch(lines[i]))
                 {
                     parallel = true;
                     match = instr_ParallelStart.Match(lines[i]);
                     IExpresion expr = IdentifyExpression(pram, proc.Gateway, match.Groups[2].Value);
-                    pram.MainProgram.instructions.Add(new Instr_ParallelStart(instructionPointer, pram, expr, i));
+                    Instr_ParallelStart instruction = new Instr_ParallelStart(instructionPointer, pram, expr, i);
+                    instruction.InstructionString = lines[i];
+                    pram.MainProgram.instructions.Add(instruction);
                     instructionPointer++;
                 }
                 else if (instr_ParallelEnd.IsMatch(lines[i]))
                 {
                     parallel = false;
                     match = instr_ParallelEnd.Match(lines[i]);
-                    pram.MainProgram.instructions.Add(new Instr_ParallelEnd(instructionPointer, pram, i));
+                    Instr_ParallelEnd instruction = new Instr_ParallelEnd(instructionPointer, pram, i);
+                    instruction.InstructionString = lines[i];
+                    pram.MainProgram.instructions.Add(instruction);
                     instructionPointer++;
                 }
                 else if (instr_GoTo.IsMatch(lines[i]))
@@ -166,7 +183,9 @@ namespace Bakalarka
                         //IExpresion expr = IdentifyExpression(pram, proc.Gateway, match.Groups[2].Value);
                         string jumpLabel = match.Groups[2].Value;
                         Expr_JumpLabel exprJump = new Expr_JumpLabel(jumpLabel, pram.Jumps);
-                        proc.Program.instructions.Add(new Instr_GoTo(exprJump, i));
+                        Instr_GoTo instruction = new Instr_GoTo(exprJump, i);
+                        instruction.InstructionString = lines[i];
+                        proc.Program.instructions.Add(instruction);
                         instructionPointerParallel++;
                     }
                     else
@@ -174,7 +193,9 @@ namespace Bakalarka
                         //IExpresion expr = IdentifyExpression(pram, proc.Gateway, match.Groups[2].Value);
                         string jumpLabel = match.Groups[2].Value;
                         Expr_JumpLabel exprJump = new Expr_JumpLabel(jumpLabel, pram.Jumps);
-                        pram.MainProgram.instructions.Add(new Instr_GoTo(exprJump, i));
+                        Instr_GoTo instruction = new Instr_GoTo(exprJump, i);
+                        instruction.InstructionString = lines[i];
+                        pram.MainProgram.instructions.Add(instruction);
                         instructionPointer++;
                     }
                 }
@@ -183,12 +204,16 @@ namespace Bakalarka
                     match = instr_Halt.Match(lines[i]);
                     if (parallel)
                     {
-                        proc.Program.instructions.Add(new Instr_Halt(instructionPointerParallel, i));
+                        Instr_Halt instruction = new Instr_Halt(instructionPointerParallel, i);
+                        instruction.InstructionString = lines[i];
+                        proc.Program.instructions.Add(instruction);
                         instructionPointerParallel++;
                     }
                     else
                     {
-                        pram.MainProgram.instructions.Add(new Instr_Halt(instructionPointer, i));
+                        Instr_Halt instruction = new Instr_Halt(instructionPointer, i);
+                        instruction.InstructionString = lines[i];
+                        pram.MainProgram.instructions.Add(instruction);
                         instructionPointer++;
                     }
                 }
@@ -200,7 +225,9 @@ namespace Bakalarka
                         IExpresion expr = IdentifyExpression(pram, proc.Gateway, match.Groups[2].Value);
                         string jumpLabel = match.Groups[4].Value;
                         Expr_JumpLabel exprJump = new Expr_JumpLabel(jumpLabel, pram.Jumps);
-                        proc.Program.instructions.Add(new Instr_IfGoTo(expr, exprJump, instructionPointerParallel, i));
+                        Instr_IfGoTo instruction = new Instr_IfGoTo(expr, exprJump, instructionPointerParallel, i);
+                        instruction.InstructionString = lines[i];
+                        proc.Program.instructions.Add(instruction);
                         instructionPointerParallel++;
                     }
                     else
@@ -208,7 +235,9 @@ namespace Bakalarka
                         IExpresion expr = IdentifyExpression(pram, proc.Gateway, match.Groups[2].Value);
                         string jumpLabel = match.Groups[4].Value;
                         Expr_JumpLabel exprJump = new Expr_JumpLabel(jumpLabel, pram.Jumps);
-                        pram.MainProgram.instructions.Add(new Instr_IfGoTo(expr, exprJump, instructionPointer, i));
+                        Instr_IfGoTo instruction = new Instr_IfGoTo(expr, exprJump, instructionPointer, i);
+                        instruction.InstructionString = lines[i];
+                        pram.MainProgram.instructions.Add(instruction);
                         instructionPointer++;
                     }
                 }
@@ -222,14 +251,18 @@ namespace Bakalarka
                         gateway = pram.sharedMemoryGateway;
                     int gatewayIndex = int.Parse(match.Groups[1].Value.Substring(1));
                     IExpresion expr = IdentifyExpression(pram, proc.Gateway, match.Groups[2].Value);
-                    if(parallel)
+                    if (parallel)
                     {
-                        proc.Program.instructions.Add(new Instr_WriteExprToMem(new MemoryGateway(gateway, gatewayIndex), instructionPointerParallel, expr, i));
+                        Instr_WriteExprToMem instruction = new Instr_WriteExprToMem(new MemoryGateway(gateway, gatewayIndex), instructionPointerParallel, expr, i);
+                        instruction.InstructionString = lines[i];
+                        proc.Program.instructions.Add(instruction);
                         instructionPointerParallel++;
                     }
                     else
                     {
-                        pram.MainProgram.instructions.Add(new Instr_WriteExprToMem(new MemoryGateway(gateway, gatewayIndex), instructionPointer, expr, i));
+                        Instr_WriteExprToMem instruction = new Instr_WriteExprToMem(new MemoryGateway(gateway, gatewayIndex), instructionPointer, expr, i);
+                        instruction.InstructionString = lines[i];
+                        pram.MainProgram.instructions.Add(instruction);
                         instructionPointer++;
                     }
                 }
@@ -245,16 +278,20 @@ namespace Bakalarka
                     IExpresion exprValue = IdentifyExpression(pram, proc.Gateway, match.Groups[3].Value);
                     if (parallel)
                     {
-                        proc.Program.instructions.Add(new Instr_WriteExprToPointerMultiMem(new MemoryGateway(gateway, 0), instructionPointerParallel, exprAddress, exprValue, i));
+                        Instr_WriteExprToPointerMultiMem instruction = new Instr_WriteExprToPointerMultiMem(new MemoryGateway(gateway, 0), instructionPointerParallel, exprAddress, exprValue, i);
+                        instruction.InstructionString = lines[i];
+                        proc.Program.instructions.Add(instruction);
                         instructionPointerParallel++;
                     }
                     else
                     {
-                        pram.MainProgram.instructions.Add(new Instr_WriteExprToPointerMultiMem(new MemoryGateway(gateway, 0), instructionPointerParallel, exprAddress, exprValue, i));
+                        Instr_WriteExprToPointerMultiMem instruction = new Instr_WriteExprToPointerMultiMem(new MemoryGateway(gateway, 0), instructionPointer, exprAddress, exprValue, i);
+                        instruction.InstructionString = lines[i];
+                        pram.MainProgram.instructions.Add(instruction);
                         instructionPointer++;
                     }
                 }
-                else if(jump.IsMatch(lines[i]))
+                else if (jump.IsMatch(lines[i]))
                 {
                     if (parallel)
                     {
@@ -266,7 +303,11 @@ namespace Bakalarka
                     }
                 }
                 else
-                    throw new NotImplementedException();
+                {
+                    throw new Exception();
+                    //pram.CompilationError = true;
+                    //break;
+                }
             }
             pram.ParallelProgram = proc.Program;
             pram.Compiled = true;

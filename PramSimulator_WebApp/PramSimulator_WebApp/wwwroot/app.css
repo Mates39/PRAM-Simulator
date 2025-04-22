@@ -80,21 +80,88 @@ a, .btn-link {
         top: 0.5rem;
     }
 
-.SharedMemoryView {
+.MemoryTable {
     overflow: auto;
     height: 30%;
     width: 30%;
 }
 
-    .SharedMemoryView .MemoryColl {
-        overflow: auto;
-        width: 20%;
+.MemoryColl {
+    width: 40px;
+}
+
+.MemoryColl input{
+    width: 40px;
+}
+
+.MemoryView {
+    border: 1px solid #000;
+    border-radius: 5px;
+    width: 100px;
+}
+
+.CodeContainer {
+    width: 250px;
+    border: 2px solid #000;
+    background-color: beige;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-width: 300px;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+}
+
+    .radio-option:hover {
+        background-color: #f0f0f0;
     }
 
-.MemoryColl {
-    width: 20px;
+.radio-input {
+    accent-color: #0078d4; /* modrá jako ve Windows */
+    width: 18px;
+    height: 18px;
 }
 
-.abc {
-    width: 20px;
+.hidden-input {
+    border: 2px dashed #999;
+    padding: 40px;
+    width: 100%;
+    text-align: center;
 }
+
+.ErrorMessageScreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 1001;
+}
+
+.ErrorMessage {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    padding: 25px;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    border-radius: 10px;
+    z-index: 1001;
+}
+

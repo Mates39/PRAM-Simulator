@@ -47,7 +47,15 @@ namespace Bakalarka
                 var accesses = MemoryAccesses.GroupBy(x => x.memoryIndex);
                 foreach (var item in accesses)
                 {
-                    if (item.Count() > 1) { MemoryAccesses.Clear(); return false; }
+                    if (item.Count() > 1) 
+                    { 
+                        var distinctValues = item.Select(x => x.value).Distinct();
+                        if (distinctValues.Count() > 1)
+                        {
+                            MemoryAccesses.Clear();
+                            return false;
+                        }
+                    }
                     var it = item.First();
                     if (it.memoryIndex >= memory.Count)
                     {
@@ -107,6 +115,26 @@ namespace Bakalarka
             }
             else if (variant == PRAM_ACCESS_TYPE.EREW)
             {
+                var accesses = MemoryAccesses.GroupBy(x => x.memoryIndex);
+                foreach (var item in accesses)
+                {
+                    if (item.Count() > 1)
+                    {
+                        MemoryAccesses.Clear();
+                        return false;
+                    }
+                    var it = item.First();
+                    if (it.memoryIndex >= memory.Count)
+                    {
+                        for (int i = memory.Count; i <= it.memoryIndex; i++)
+                        {
+                            memory.Add(new MemCell(i, 0));
+                        }
+                    }
+                    var mem = memory.FirstOrDefault(x => x.Index == it.memoryIndex);
+                    if (mem != null) { mem.Value = it.value; }
+                }
+                MemoryAccesses.Clear();
                 return true;
             }
             else

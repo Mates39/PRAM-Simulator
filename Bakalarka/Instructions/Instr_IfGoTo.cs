@@ -13,6 +13,7 @@ namespace Bakalarka.Instructions
         private IExpresion ExprAddress { get; set; }
         private int Address;
         public int InstructionPointer { get; set; }
+        public string InstructionString { get; set; }
         public int CodeLineIndex { get; set; }
         public Instr_IfGoTo(IExpresion exprCondition, IExpresion exprAddress, int IP, int codeLineIndex) { ExprCondition = exprCondition; ExprAddress = exprAddress; InstructionPointer = IP; CodeLineIndex = codeLineIndex; }
 

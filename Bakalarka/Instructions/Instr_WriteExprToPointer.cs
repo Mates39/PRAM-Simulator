@@ -11,6 +11,7 @@ namespace Bakalarka.Instructions
     {
         private MemoryGateway gateway;
         public int InstructionPointer { get; set; }
+        public string InstructionString { get; set; }
         public int CodeLineIndex { get; set; }
         private IExpresion expresion;
         public Instr_WriteExprToPointer(MemoryGateway gat, int IP, IExpresion expr, int codeLineIndex) { gateway = gat; InstructionPointer = IP; expresion = expr; CodeLineIndex = codeLineIndex; }

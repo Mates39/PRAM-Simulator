@@ -16,6 +16,7 @@ namespace Bakalarka.Instructions
         }
         public Instr_GoTo(IExpresion expr, int codeLineIndex) { this.Expresion = expr; CodeLineIndex = codeLineIndex; }
         public int InstructionPointer { get; set; }
+        public string InstructionString { get; set; }
         public int CodeLineIndex { get; set; }
         public int address;
         public IExpresion Expresion;

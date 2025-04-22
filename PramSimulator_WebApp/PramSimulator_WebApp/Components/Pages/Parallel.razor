@@ -8,29 +8,93 @@
 <p>Parallel: @pram.ParallelExecution</p>
 
 
-@foreach(var proc in pram.ActiveProcessors)
-{
-	<table class="SharedMemoryView">
-		<thead>
-			<tr>
-				<th class="MemoryColl">Index</th>
-				<th class="abc">Value</th>
-			</tr>
-		</thead>
-		<tbody>
-			@foreach (var item in proc.LocalMemory.memory)
-			{
-				<tr>
-					<td>@item.Index</td>
-					<td>@item.Value</td>
-				</tr>
-			}
-		</tbody>
-	</table>
-}
+<div class="container">
+	<div class="row">
+		@foreach (var proc in pram.ActiveProcessors)
+		{
+			<div class="col">
+				<div class="MemoryContainer">
+					<div class="MemoryView">
+						<table class="MemoryTable">
+							<thead>
+								<tr>
+									<th class="MemoryColl">Index</th>
+									<th class="MemoryColl">Value</th>
+								</tr>
+							</thead>
+							<tbody>
+								@foreach (var item in proc.LocalMemory.memory)
+								{
+									<tr>
+										<td class="MemoryColl">
+											@item.Index
+										</td>
+										<td class="MemoryColl">
+											<input class="InputValue" type="text" @bind="item.Value" />
+										</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					</div>
+				</div>
+				<div class="Code">
+					@{
+						int startindex = 0;
+						Code = pram.CodeString;
+						string[] lines = Code.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+					}
+					<div class="CodeContainer">
+						@for (int i = 0; i < lines.Length; i++)
+						{
+							if (lines[i].StartsWith("parallelStart"))
+							{
+								startindex = i;
+								break;
+							}
+						}
+						@for (int i = startindex; i < lines.Length; i++)
+						{
+							if (lines[i].StartsWith("parallelEnd"))
+							{
+								break;
+							}
+							if (i == proc.CurrentCodeLine)
+							{
+								<div class="CodeLine" style="background:red">
+									@lines[i]
+								</div>
+							}
+							else
+							{
+								<div class="CodeLine">
+									@lines[i]
+								</div>
+							}
+						}
+					</div>
+				</div>
+			</div>
+		}
+	</div>
+</div>
 <button class="btn btn-primary" @onclick="NextStep">NExt</button>
 
+@if (pram.MemoryAccessError)
+{
+	<div class="ErrorMessageScreen"></div>
+	<div class="ErrorMessage">
+		<div class="text-center mb-3">
+			<span>Memory Access violation</span>
+		</div>
+		<div class="text-center mt-3">
+			<button class="btn btn-primary" @onclick="CloseErrorMessage">Close</button>
+		</div>
+	</div>
+}
+
 @code {
+	private string Code = "";
 	private void NextStep()
 	{
 		if (pram.Compiled)
@@ -39,12 +103,31 @@
 			{
 				int i = pram.ExecuteNextParallelStep();
 				if(!pram.ParallelExecution)
-					Navigation.NavigateTo("/home");
+				{
+					pram.ExecuteNextInstruction();
+					pram.CurrentCodeLine++;
+					Navigation.NavigateTo("/");
+				}
 			}
 			else
 			{
 				pram.ExecuteNextInstruction();
 			}
+			if (!pram.ParallelExecution)
+				pram.CurrentCodeLine++;
+			foreach(var p in pram.ActiveProcessors)
+			{
+				if(p.Running)
+				{
+					pram.CurrentCodeLine = pram.ParallelExecution ? p.Program.instructions[p.InstructionPointer].CodeLineIndex : pram.MainProgram.instructions[pram.InstructionPointer].CodeLineIndex;
+					break;
+				}
+			}
 		}
+	}
+	private void CloseErrorMessage()
+	{
+		pram.Restart();
+		Navigation.NavigateTo("/");
 	}
 }

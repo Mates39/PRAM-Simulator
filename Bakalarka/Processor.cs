@@ -11,6 +11,7 @@ namespace Bakalarka
         public int Id { get; set; }
         public int InstructionPointer = 0;
         public bool Running = true;
+        public int CurrentCodeLine {  get; set; }
         public ProgramCode Program { get; set; }
         public Memory LocalMemory { get; set; }
         public Dictionary<string, int> Jumps { get; set; }
@@ -40,6 +41,10 @@ namespace Bakalarka
             if (InstructionPointer >= 0)
             {
                 InstructionPointer = Program.instructions[InstructionPointer].Execute(Id);
+                if (InstructionPointer >= 0)
+                    CurrentCodeLine = Program.instructions[InstructionPointer].CodeLineIndex;
+                else
+                    CurrentCodeLine++;
                 if (InstructionPointer < 0)
                     Running = false;
             }

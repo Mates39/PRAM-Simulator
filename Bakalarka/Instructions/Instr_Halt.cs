@@ -10,6 +10,7 @@ namespace Bakalarka.Instructions
     {
         public int InstructionPointer { get; set; }
         public int CodeLineIndex { get; set; }
+        public string InstructionString { get; set; }
         public Instr_Halt(int IP, int codeLineIndex) { InstructionPointer = IP; CodeLineIndex = codeLineIndex; }
         public int Execute(int procID)
         {

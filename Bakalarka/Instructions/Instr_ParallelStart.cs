@@ -10,6 +10,7 @@ namespace Bakalarka.Instructions
     internal class Instr_ParallelStart : IInstruction
     {
         public int InstructionPointer { get; set; }
+        public string InstructionString { get; set; }
         public int CodeLineIndex { get; set; }
         public int procCount { get; set; }
         public IExpresion Expresion { get; set; }

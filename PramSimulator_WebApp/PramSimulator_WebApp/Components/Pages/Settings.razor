@@ -1,0 +1,112 @@
+﻿@page "/settings"
+@rendermode InteractiveServer
+@using Bakalarka
+@using PramSimulator_WebApp.Components.Services
+@inject PRAM pram
+@inject NavigationManager Navigation
+@inject CodeService codeService
+
+<h3>Nahraj soubor (drag & drop nebo kliknutím)</h3>
+
+<InputFile id="fileInput" OnChange="HandleSelected" class="hidden-input" style="border: 2px dashed #999; padding: 40px; width: 100%; text-align: center;" />
+
+@if (uploadedFile != null && !LoadError)
+{
+    <div class="alert alert-success">Soubor uspesne nahran</div>
+    <button class="btn btn-primary" @onclick="LoadProgram">
+        Načíst
+    </button>
+}
+@if (LoadError)
+{
+    <div class="alert alert-danger">Souor neni .txt</div>
+}
+<br />
+<br />
+<br />
+
+<h3>Vyber variantu</h3>
+
+<InputRadioGroup @bind-Value="pram.AccessType" class="radio-group">
+    <label class="radio-option">
+        <InputRadio Value="0" class="radio-input" />
+        <span>CRCW_Common</span>
+    </label>
+    <label class="radio-option">
+        <InputRadio Value="1" class="radio-input" />
+        <span>CRCW_Arbitrary</span>
+    </label>
+    <label class="radio-option">
+        <InputRadio Value="2" class="radio-input" />
+        <span>CRCW_Priority</span>
+    </label>
+    <label class="radio-option">
+        <InputRadio Value="3" class="radio-input" />
+        <span>CREW</span>
+    </label>
+    <label class="radio-option">
+        <InputRadio Value="4" class="radio-input" />
+        <span>EREW</span>
+    </label>
+</InputRadioGroup>
+<br />
+<br />
+<br />
+
+<h3>Předpřipravené PRAM programy</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Název</th>
+            <th>Akce</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var program in codeService.Codes)
+        {
+            <tr>
+                <td>@program.Key</td>
+                <td>
+                    <button class="btn btn-primary" @onclick="() => LoadProgram(program)">
+                        Načíst
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private IBrowserFile uploadedFile = null;
+    private string file = "";
+    private bool LoadError = false;
+
+    private async Task HandleSelected(InputFileChangeEventArgs e)
+    {
+        uploadedFile = e.File;
+        if (!uploadedFile.Name.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
+        {
+            // Např. zobrazit chybu, return nebo nastavit stav
+            LoadError = true;
+            return;
+        }
+        LoadError = false;
+    }
+    private async Task<string> ReadFileAsStringAsync(IBrowserFile file)
+    {
+        using var stream = file.OpenReadStream(file.Size); // otevře čtecí stream
+        using var reader = new StreamReader(stream);
+        return await reader.ReadToEndAsync(); // načte celý obsah jako string
+    }
+    private void LoadProgram(KeyValuePair<string, string> program)
+    {
+        pram.CodeString = program.Value;
+        Navigation.NavigateTo("/");
+    }
+    private async Task LoadProgram()
+    {
+        pram.CodeString = await ReadFileAsStringAsync(uploadedFile);
+        Navigation.NavigateTo("/");
+    }
+}

@@ -10,6 +10,7 @@ namespace Bakalarka.Instructions
     internal class Instr_WriteExprToPointerMultiMem : IInstruction
     {
         public int InstructionPointer { get; set; }
+        public string InstructionString { get; set; }
         public int CodeLineIndex { get; set; }
         public MemoryGateway Gateway { get; set; }
         public IExpresion ExprAddress { get; set; }

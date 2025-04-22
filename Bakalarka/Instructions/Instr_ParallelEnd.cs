@@ -9,6 +9,7 @@ namespace Bakalarka.Instructions
     internal class Instr_ParallelEnd : IInstruction
     {
         public int InstructionPointer { get; set; }
+        public string InstructionString { get; set; }
         public int CodeLineIndex { get; set; }
         public PRAM pram { get; set; }
         public Instr_ParallelEnd(int instructionPointer, PRAM pram, int codeLineIndex)
