@@ -41,8 +41,8 @@ namespace Bakalarka
         static void Main(string[] args)
         {
 
-            Regex jump = new Regex(@"^(:[a-zA-Z]+)$");
-            Console.WriteLine(jump.IsMatch(":label"));
+            Regex reg = new Regex(@"^\((\d+):(\d+)\)$");
+            Console.WriteLine(reg.IsMatch("(1:0)"));
         }
 
     }

@@ -1,100 +1,256 @@
 ﻿@page "/parallel"
 @rendermode InteractiveServer
 @using Bakalarka
+@using PramSimulator_WebApp.Components.Services
 @inject PRAM pram
 @inject NavigationManager Navigation
+@inject PramSimulatorService pramService
 
 <h3>Parallel</h3>
 <p>Parallel: @pram.ParallelExecution</p>
 
-
-<div class="container">
-	<div class="row">
-		@foreach (var proc in pram.ActiveProcessors)
-		{
-			<div class="col">
-				<div class="MemoryContainer">
-					<div class="MemoryView">
-						<table class="MemoryTable">
-							<thead>
-								<tr>
-									<th class="MemoryColl">Index</th>
-									<th class="MemoryColl">Value</th>
-								</tr>
-							</thead>
-							<tbody>
-								@foreach (var item in proc.LocalMemory.memory)
-								{
-									<tr>
-										<td class="MemoryColl">
-											@item.Index
-										</td>
-										<td class="MemoryColl">
-											<input class="InputValue" type="text" @bind="item.Value" />
-										</td>
-									</tr>
-								}
-							</tbody>
-						</table>
-					</div>
-				</div>
-				<div class="Code">
-					@{
-						int startindex = 0;
-						Code = pram.CodeString;
-						string[] lines = Code.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-					}
-					<div class="CodeContainer">
-						@for (int i = 0; i < lines.Length; i++)
-						{
-							if (lines[i].StartsWith("parallelStart"))
-							{
-								startindex = i;
-								break;
-							}
-						}
-						@for (int i = startindex; i < lines.Length; i++)
-						{
-							if (lines[i].StartsWith("parallelEnd"))
-							{
-								break;
-							}
-							if (i == proc.CurrentCodeLine)
-							{
-								<div class="CodeLine" style="background:red">
-									@lines[i]
-								</div>
-							}
-							else
-							{
-								<div class="CodeLine">
-									@lines[i]
-								</div>
-							}
-						}
-					</div>
-				</div>
-			</div>
-		}
+<div class="toolbar">
+	<div class="info">
+		<div class="info-item">
+			<span class="info-icon">⚡</span>
+			<span>ParallelExecution: @pram.ParallelExecution</span>
+		</div>
+		<div class="info-item">
+			<span class="info-icon"></span>
+			<span>Active processors: @pram.ActiveProcessors.Count</span>
+		</div>
+		<div class="info-item">
+			<span class="info-icon">🧠</span>
+			<span>
+				PRAM varianta:
+				@if (pram.AccessType == 0)
+				{
+					<span>CRCW_COMMON</span>
+				}
+				@if (pram.AccessType == 1)
+				{
+					<span>CRCW_ARBITRARY</span>
+				}
+				@if (pram.AccessType == 2)
+				{
+					<span>CRCW_PRIORITY</span>
+				}
+				@if (pram.AccessType == 3)
+				{
+					<span>CREW</span>
+				}
+				@if (pram.AccessType == 4)
+				{
+					<span>EREW</span>
+				}
+			</span>
+		</div>
+	</div>
+	<div class="ButtonsPanel">
+		<button class="btn btn-primary" @onclick="Restart">Restart</button>
+		<button class="btn btn-primary" @onclick="NextStep">NEXT</button>
 	</div>
 </div>
-<button class="btn btn-primary" @onclick="NextStep">NExt</button>
+
+<div class="row">
+	<div class="col-2">
+		<div class="MemoryContainer">
+			<div class="ProcessorInfo">
+				<h5>Shared memory</h5>
+			</div>
+			<div class="MemoryView">
+				<table class="MemoryTable">
+					<thead>
+						<tr>
+							<th class="MemoryColl">Index</th>
+							<th class="MemoryColl">Value</th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach (var item in pram.sharedMemory.memory)
+						{
+							<tr>
+								<td class="MemoryColl">
+									@item.Index
+								</td>
+								<td class="MemoryColl">
+									<input class="InputValue" type="text" @bind="item.Value" />
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+	<div class="col-10">
+		<div class="ProcessorsRow">
+			@foreach (var proc in pram.ActiveProcessors)
+			{
+				var ProcClass = proc.Running ? "ProcessorCard" : "ProcessorCard FinishedProcessor";
+				<div class="@ProcClass">
+					<div class="ProcessorInfo">
+						<h5>Processor ID: @proc.Id</h5>
+						@if (!proc.Running)
+						{
+							<span class="Status Finished">Finished 🛑</span>
+						}
+					</div>
+					<div class="MemoryContainer">
+						<div class="MemoryView">
+							<table class="MemoryTable">
+								<thead>
+									<tr>
+										<th class="MemoryColl">Index</th>
+										<th class="MemoryColl">Value</th>
+									</tr>
+								</thead>
+								<tbody>
+									@foreach (var item in proc.LocalMemory.memory)
+									{
+										<tr>
+											<td class="MemoryColl">
+												@item.Index
+											</td>
+											<td class="MemoryColl">
+												<input class="InputValue" type="text" @bind="item.Value" disabled="@(!proc.Running)" />
+											</td>
+										</tr>
+									}
+								</tbody>
+							</table>
+						</div>
+					</div>
+					<div class="Code">
+						@{
+							int startindex = 0;
+						}
+						<div class="CodeContainer">
+							@for (int i = 0; i < CodeLines.Count; i++)
+							{
+								if (CodeLines[i].StartsWith("parallelStart"))
+								{
+									startindex = i + 1;
+									break;
+								}
+							}
+							@foreach (var line in CodeLines)
+							{
+								if (line.Key < startindex)
+								{
+									continue;
+								}
+								if (line.Value.StartsWith("parallelEnd"))
+								{
+									break;
+								}
+								var isActive = line.Key == proc.CurrentCodeLine;
+								var isComment = line.Value.StartsWith("#");
+								var isLabel = line.Value.StartsWith(":");
+
+								if (line.Value.StartsWith("MEMORYINPUT"))
+									break;
+
+								var cssClass = "CodeLine";
+								if (isActive) cssClass += " Active";
+								else if (isComment) cssClass += " Comment";
+								else if (isLabel) cssClass += " Label";
+
+								<div class="@cssClass">
+									@if (!isComment && !isLabel && !string.IsNullOrWhiteSpace(line.Value))
+									{
+										<input type="checkbox" checked="@pram.Breakpoints.Contains(line.Key)" @onchange="() => ToggleBreakpoint(line.Key)" disabled="@(!proc.Running)" />
+									}
+									@line.Value
+								</div>
+							}
+						</div>
+					</div>
+				</div>
+			}
+		</div>
+	</div>
+</div>
+
 
 @if (pram.MemoryAccessError)
 {
 	<div class="ErrorMessageScreen"></div>
 	<div class="ErrorMessage">
 		<div class="text-center mb-3">
-			<span>Memory Access violation</span>
+			@{
+				string[] lines = pram.sharedMemory.ErrorMessage.Split('\n');
+				foreach(var line in lines)
+				{
+					<span>@line</span><br />
+				}
+			}
 		</div>
 		<div class="text-center mt-3">
 			<button class="btn btn-primary" @onclick="CloseErrorMessage">Close</button>
 		</div>
 	</div>
 }
+@if (ShowConflictDialog)
+{
+	<div class="ErrorMessageScreen">
+		<div class="ErrorMessage">
+			<h4 class="conflict-title">Vyber jednu z hodnot pro CRCW arbitrární zápis</h4>
+			<div class="ArbitraryConflict">
+				@foreach (var val in ConflictValues)
+				{
+					<button class="btn btn-outline-primary conflict-button" @onclick="() => ResolveConflict(val.value)">
+						<i class="fa-solid fa-location-dot"></i> Pozice: <b>@val.memoryIndex</b> ➔ <b>@val.value</b>
+					</button>
+				}
+				<button class="btn btn-primary random-button" @onclick="() => ResolveConflictRandom(ConflictValues.Count())">
+					<i class="fa-solid fa-random"></i> Zvol náhodně
+				</button>
+			</div>
+		</div>
+	</div>
+}
 
+@implements IDisposable
 @code {
 	private string Code = "";
+	private Dictionary<int, string> CodeLines;
+	public bool ShowConflictDialog { get; set; }
+	public IGrouping<int, MemoryAccess> ConflictValues { get; set; }
+	private TaskCompletionSource<int>? conflictTcs;
+	protected override async Task OnInitializedAsync()
+	{
+		pramService.OnChanged += Update;
+		CodeLines = new Dictionary<int, string>();
+		string[] lines = pram.CodeString.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+		@for (int i = 0; i < lines.Length; i++)
+		{
+			CodeLines.Add(i, lines[i]);
+		}
+		pram.sharedMemory.OnArbitraryConflictResolved = ShowConflictSelection;
+		pramService.NavigationToHome += NavigateHome;
+		StateHasChanged();
+	}
+	public void Dispose()
+	{
+		pramService.NavigationToHome -= NavigateHome;
+		pramService.OnChanged -= Update;
+	}
+	private async void NavigateHome()
+	{
+		await InvokeAsync(() =>
+		{
+			Navigation.NavigateTo("/");
+		});
+	}
+	private async void Update()
+	{
+		await InvokeAsync(StateHasChanged);
+	}
+	private async Task Restart()
+	{
+		pram.Restart();
+	}
 	private void NextStep()
 	{
 		if (pram.Compiled)
@@ -129,5 +285,34 @@
 	{
 		pram.Restart();
 		Navigation.NavigateTo("/");
+	}
+	private void ToggleBreakpoint(int lineIndex)
+	{
+		if (pram.Breakpoints.Contains(lineIndex))
+			pram.Breakpoints.Remove(lineIndex);
+		else
+			pram.Breakpoints.Add(lineIndex);
+
+	}
+	public async Task<int> ShowConflictSelection(IGrouping<int, MemoryAccess> values)
+	{
+		ConflictValues = values;
+		ShowConflictDialog = true;
+		StateHasChanged();
+
+		conflictTcs = new TaskCompletionSource<int>();
+		return await conflictTcs.Task;
+	}
+
+	private void ResolveConflict(int selectedValue)
+	{
+		ShowConflictDialog = false;
+		conflictTcs?.SetResult(selectedValue);
+	}
+	private void ResolveConflictRandom(int procCount)
+	{
+		ShowConflictDialog = false;
+		int selectedValue = new Random().Next(0, procCount);
+		conflictTcs?.SetResult(selectedValue);
 	}
 }

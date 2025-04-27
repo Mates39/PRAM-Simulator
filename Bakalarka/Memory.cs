@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -17,14 +18,33 @@ namespace Bakalarka
             this.memory = new ObservableCollection<MemCell>();
             this.MemoryAccesses = new List<MemoryAccess>();
         }
+        public string ErrorMessage { get; set; }
+        public Func<IGrouping<int, MemoryAccess>, Task<int>>? OnArbitraryConflictResolved;
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+        public void Add(MemCell memCell)
+        {
+            if (memory.Count <= memCell.Index)
+            {
+                for (int i = memory.Count; i <= memCell.Index; i++)
+                {
+                    memory.Add(new MemCell(i, 0));
+                }
+            }
+            var item = memory.First(i => i.Index == memCell.Index);
+            if (item != null) { item.Value = memCell.Value; }
+        }
         public void TryWrite(MemoryAccess ma)
         {
+            if (ma.memoryIndex < 0)
+            {
+                ErrorMessage = $"Index  je zaporny.... index:{ma.memoryIndex}, hodnota:{ma.value}";
+                throw new Exception($"Index zapisovane hodnoty je zaporny.... index:{ma.memoryIndex}, hodnota:{ma.value}");
+            }
             if(ma.gateway is LocalMemoryGateway)
             {
                 if(ma.memoryIndex >= memory.Count)
@@ -40,7 +60,7 @@ namespace Bakalarka
             else
                 MemoryAccesses.Add(ma);
         }
-        public bool MemoryAccessCheck(int variant)
+        public async Task MemoryAccessCheck(int variant)
         {
             if (variant == PRAM_ACCESS_TYPE.CRCW_C)
             {
@@ -53,7 +73,14 @@ namespace Bakalarka
                         if (distinctValues.Count() > 1)
                         {
                             MemoryAccesses.Clear();
-                            return false;
+                            StringBuilder sb = new StringBuilder();
+                            sb.AppendLine("Poruseni varianty CRCW_COMMON");
+                            foreach (var value in item)
+                            {
+                                sb.AppendLine($"procesor {value.processorID} zapisoval do pameti na pozici {value.memoryIndex} hodnotu: {value.value}");
+                            }
+                            ErrorMessage = sb.ToString();
+                            throw new Exception();
                         }
                     }
                     var it = item.First();
@@ -68,15 +95,23 @@ namespace Bakalarka
                     if (mem != null) { mem.Value = it.value; }
                 }
                 MemoryAccesses.Clear();
-                return true;
             }
             else if (variant == PRAM_ACCESS_TYPE.CRCW_A)
             {
                 var accesses = MemoryAccesses.GroupBy(x => x.memoryIndex);
+                int procID = 0;
                 foreach (var item in accesses)
                 {
-                    int random = new Random().Next(0, item.Count());
-                    var it = item.Where(x => x.processorID == random).First();
+                    if (item.Count() > 1)
+                    {
+                        if (OnArbitraryConflictResolved != null)
+                        {
+                            procID = await OnArbitraryConflictResolved(item);
+                        }
+                    }
+                    else
+                        procID = new Random().Next(0, item.Count());
+                    var it = item.Where(x => x.processorID == procID).First();
                     if (it.memoryIndex >= memory.Count)
                     {
                         for (int i = memory.Count; i <= it.memoryIndex; i++)
@@ -88,7 +123,6 @@ namespace Bakalarka
                     if (mem != null) { mem.Value = it.value; }
                 }
                 MemoryAccesses.Clear();
-                return true;
             }
             else if (variant == PRAM_ACCESS_TYPE.CRCW_P)
             {
@@ -107,11 +141,10 @@ namespace Bakalarka
                     if (mem != null) { mem.Value = it.value; }
                 }
                 MemoryAccesses.Clear();
-                return true;
             }
             else if (variant == PRAM_ACCESS_TYPE.CREW)
             {
-                return true;
+                
             }
             else if (variant == PRAM_ACCESS_TYPE.EREW)
             {
@@ -121,7 +154,7 @@ namespace Bakalarka
                     if (item.Count() > 1)
                     {
                         MemoryAccesses.Clear();
-                        return false;
+                        throw new Exception();
                     }
                     var it = item.First();
                     if (it.memoryIndex >= memory.Count)
@@ -135,11 +168,10 @@ namespace Bakalarka
                     if (mem != null) { mem.Value = it.value; }
                 }
                 MemoryAccesses.Clear();
-                return true;
             }
             else
             {
-                return false;
+                throw new Exception();
             }
         }
     }

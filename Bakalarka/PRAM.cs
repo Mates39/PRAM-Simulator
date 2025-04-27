@@ -39,11 +39,18 @@ namespace Bakalarka
         public int AccessType { get; set; } = PRAM_ACCESS_TYPE.CRCW_C;
         public int CurrentCodeLine { get; set; }
         public string CodeString { get; set; }
+        public string MemoryInputString { get; set; }
         public IBrowserFile? UploadedCode;
         public SharedMemoryGateway sharedMemoryGateway { get; set; }
         public bool MemoryAccessError { get; set; }
         public bool CompilationError { get; set; }
+        public bool LoadingFileError { get; set; }
         public bool Halted { get; set; }
+        public bool MemoryIndexError {  get; set; }
+        public string ErrorMessage { get; set; }
+        public int Breakpoint { get; set; }
+        public bool AutoRun { get; set; }
+        public HashSet<int> Breakpoints { get; set; }
         public PRAM()
         {
             Processors = new ObservableCollection<Processor>();
@@ -58,10 +65,14 @@ namespace Bakalarka
             ParallelExecution = false;
             InstructionPointer = 0;
             Compiled = false;
-            CodeString = ""; 
+            CodeString = "";
+            MemoryInputString = "";
             MemoryAccessError = false;
             CompilationError = false;
+            MemoryIndexError = false;
             Halted = false;
+            Breakpoints = new HashSet<int>();
+
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -88,7 +99,7 @@ namespace Bakalarka
             foreach (Processor p in ActiveProcessors)
             {
                 p.InstructionPointer = 0;
-                p.CurrentCodeLine = p.Program.instructions[p.InstructionPointer].CodeLineIndex;
+                p.CurrentCodeLine = CurrentCodeLine + 1;
                 p.Running = true;
             }
             ParallelExecution = true;
@@ -111,11 +122,25 @@ namespace Bakalarka
         {
             if (InstructionPointer >= 0)
             {
-                InstructionPointer = this.MainProgram.instructions[InstructionPointer].Execute(0);
-                if (sharedMemory.MemoryAccessCheck(AccessType))
+                try
+                {
+                    InstructionPointer = this.MainProgram.instructions[InstructionPointer].Execute(0);
+                }
+                catch (Exception e)
+                {
+                    MemoryIndexError = true;
+                    ErrorMessage = e.Message;
+                }
+                try
+                {
+                    sharedMemory.MemoryAccessCheck(AccessType);
                     return 1;
-                else
+                }
+                catch(Exception e)
+                {
                     return -1;
+                }
+
             }
             else
             {
@@ -131,18 +156,29 @@ namespace Bakalarka
             {
                 if (p.Running == true)
                 {
-                    p.ExecuteNextInstruction();
-                    if (p.Running == false)
-                        halted++;
+                    try
+                    {
+                        p.ExecuteNextInstruction();
+                        if (p.Running == false)
+                            halted++;
+                    }
+                    catch(Exception e)
+                    {
+                        MemoryIndexError = true;
+                        ErrorMessage = e.Message;
+                    }
                 }
                 else
                     halted++;
             }
             if (halted == ActiveProcessors.Count)
                 ParallelExecution = false;
-            if (sharedMemory.MemoryAccessCheck(AccessType))
+            try
+            {
+                sharedMemory.MemoryAccessCheck(AccessType);
                 return 1;
-            else
+            }
+            catch
             {
                 MemoryAccessError = true;
                 return -1;
@@ -153,12 +189,10 @@ namespace Bakalarka
             Compiled = false;
             Halted = false;
             InstructionPointer = 0;
-            CurrentCodeLine = 1000;
+            CurrentCodeLine = -1;
             ParallelExecution = false;
             Processors.Clear();
             Processors.Add(new Processor(0, new LocalMemoryGateway()));
-            Processors[0].LocalMemory.memory.Add(new MemCell(0, 0));
-            Processors[0].LocalMemory.memory.Add(new MemCell(1, 0));
             Jumps.Clear();
             MainProgram.instructions.Clear();
             ClearErrors();
@@ -168,6 +202,7 @@ namespace Bakalarka
         {
             MemoryAccessError = false;
             CompilationError = false;
+            MemoryIndexError = false;
         }
     }
 }

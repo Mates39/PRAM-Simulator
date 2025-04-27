@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace Bakalarka.Instructions
 {
-    public class Instr_Write : IInstruction
+    internal class Instr_Write : IInstruction
     {
-        public Instr_Write(int address, int value) { this.value = value; this.address = address; }
-        public int address;
+        public Instr_Write(MemoryGateway gateway, int value) { this.value = value; this.gateway = gateway; }
+        MemoryGateway gateway;
         public int value;
 
         public int InstructionPointer { get; set; }
@@ -17,7 +17,7 @@ namespace Bakalarka.Instructions
         public int CodeLineIndex { get; set; }
         public int Execute(int procID)
         {
-            return 1;
+            return InstructionPointer + 1;
         }
 
         public IInstruction Duplicate(LocalMemoryGateway localGateway)

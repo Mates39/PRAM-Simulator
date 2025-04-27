@@ -18,11 +18,13 @@ namespace Bakalarka
     {
         public Regex comment = new Regex(@"^#(.+)$");
         public Regex emptyLine = new Regex(@"^\s*$");
+        public Regex MemoryInput = new Regex(@"^MEMORYINPUT$");
+        public Regex MemoryInputValue = new Regex(@"^\((\d+):(\d+)\)$");
         public Regex instr_WriteExprToMem = new Regex(@"^([SL]\d+)\s:=\s(.+)$");
         public Regex instr_WriteExprToPointer = new Regex(@"^([SL])\[(.+)]\s:=\s(.*)$");
         public Regex instr_ParallelStart = new Regex(@"^(parallelStart)\s(.+)$");
         public Regex instr_ParallelEnd = new Regex(@"^parallelEnd$");
-        public Regex instr_IfGoTo = new Regex(@"^(if)\s(.+)\s(goto)\s(:[a-zA-Z]+)$");
+        public Regex instr_IfGoTo = new Regex(@"^(if)\s(.+)\s(goto)\s(:[a-zA-Z][a-zA-Z0-9]+)$");
         public Regex instr_GoTo = new Regex(@"^(goto)\s(:[a-zA-Z]+)$");
         public Regex instr_Halt = new Regex(@"^halt$");
 
@@ -34,7 +36,7 @@ namespace Bakalarka
         public Regex expr_ProcIndex = new Regex(@"^\{ind\}$");
         public Regex expr_Comparision = new Regex(@"^([SL]\d+)\s(==|!=|<=|>=|<|>)\s([SL]\d+|\d+)$");
 
-        public Regex jump = new Regex(@"^(:[a-zA-Z]+)$");
+        public Regex jump = new Regex(@"^(:[a-zA-Z][a-zA-Z0-9]+)$");
         public CodeCompiler()
         {
         }
@@ -96,7 +98,6 @@ namespace Bakalarka
                 IGateway gateway2;
                 gateway1 = match.Groups[1].Value[0] == 'S' ? pram.sharedMemoryGateway : lmg;
                 IExpresion expr = IdentifyExpression(pram, lmg, match.Groups[2].Value);
-                //int gatewayIndex = int.Parse(match.Groups[2].Value.Substring(1));
                 return new Expr_Pointer(new MemoryGateway(gateway1, 0), expr);
             }
             else if (expr_ProcIndex.IsMatch(input))
@@ -134,183 +135,220 @@ namespace Bakalarka
                 }
             }
             else
-                throw new NotImplementedException();
+                throw new Exception();
         }
-        public void Compile(PRAM pram, string input)
+        public void Compile(PRAM pram)
         {
             pram.Restart();
             Processor proc = pram.Processors[0];
-            string[] lines = input.Split('\n');
+            string[] lines = pram.CodeString.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
             bool parallel = false;
             Match match;
             int instructionPointer = 0;
             int instructionPointerParallel = 0;
             for (int i = 0; i < lines.Count(); i++)
             {
-                lines[i] = lines[i].Trim();
-                if (comment.IsMatch(lines[i]))
+                try
                 {
-                    continue;
-                }
-                if (emptyLine.IsMatch(lines[i]))
-                {
-                    continue;
-                }
-                if (instr_ParallelStart.IsMatch(lines[i]))
-                {
-                    parallel = true;
-                    match = instr_ParallelStart.Match(lines[i]);
-                    IExpresion expr = IdentifyExpression(pram, proc.Gateway, match.Groups[2].Value);
-                    Instr_ParallelStart instruction = new Instr_ParallelStart(instructionPointer, pram, expr, i);
-                    instruction.InstructionString = lines[i];
-                    pram.MainProgram.instructions.Add(instruction);
-                    instructionPointer++;
-                }
-                else if (instr_ParallelEnd.IsMatch(lines[i]))
-                {
-                    parallel = false;
-                    match = instr_ParallelEnd.Match(lines[i]);
-                    Instr_ParallelEnd instruction = new Instr_ParallelEnd(instructionPointer, pram, i);
-                    instruction.InstructionString = lines[i];
-                    pram.MainProgram.instructions.Add(instruction);
-                    instructionPointer++;
-                }
-                else if (instr_GoTo.IsMatch(lines[i]))
-                {
-                    match = instr_GoTo.Match(lines[i]);
-                    if (parallel)
+                    lines[i] = lines[i].Trim();
+                    if (comment.IsMatch(lines[i]))
                     {
-                        //IExpresion expr = IdentifyExpression(pram, proc.Gateway, match.Groups[2].Value);
-                        string jumpLabel = match.Groups[2].Value;
-                        Expr_JumpLabel exprJump = new Expr_JumpLabel(jumpLabel, pram.Jumps);
-                        Instr_GoTo instruction = new Instr_GoTo(exprJump, i);
-                        instruction.InstructionString = lines[i];
-                        proc.Program.instructions.Add(instruction);
-                        instructionPointerParallel++;
+                        continue;
                     }
-                    else
+                    if (emptyLine.IsMatch(lines[i]))
                     {
-                        //IExpresion expr = IdentifyExpression(pram, proc.Gateway, match.Groups[2].Value);
-                        string jumpLabel = match.Groups[2].Value;
-                        Expr_JumpLabel exprJump = new Expr_JumpLabel(jumpLabel, pram.Jumps);
-                        Instr_GoTo instruction = new Instr_GoTo(exprJump, i);
-                        instruction.InstructionString = lines[i];
-                        pram.MainProgram.instructions.Add(instruction);
-                        instructionPointer++;
+                        continue;
                     }
-                }
-                else if (instr_Halt.IsMatch(lines[i]))
-                {
-                    match = instr_Halt.Match(lines[i]);
-                    if (parallel)
+                    if (instr_ParallelStart.IsMatch(lines[i]))
                     {
-                        Instr_Halt instruction = new Instr_Halt(instructionPointerParallel, i);
-                        instruction.InstructionString = lines[i];
-                        proc.Program.instructions.Add(instruction);
-                        instructionPointerParallel++;
-                    }
-                    else
-                    {
-                        Instr_Halt instruction = new Instr_Halt(instructionPointer, i);
-                        instruction.InstructionString = lines[i];
-                        pram.MainProgram.instructions.Add(instruction);
-                        instructionPointer++;
-                    }
-                }
-                else if (instr_IfGoTo.IsMatch(lines[i]))
-                {
-                    match = instr_IfGoTo.Match(lines[i]);
-                    if (parallel)
-                    {
+                        parallel = true;
+                        match = instr_ParallelStart.Match(lines[i]);
                         IExpresion expr = IdentifyExpression(pram, proc.Gateway, match.Groups[2].Value);
-                        string jumpLabel = match.Groups[4].Value;
-                        Expr_JumpLabel exprJump = new Expr_JumpLabel(jumpLabel, pram.Jumps);
-                        Instr_IfGoTo instruction = new Instr_IfGoTo(expr, exprJump, instructionPointerParallel, i);
+                        Instr_ParallelStart instruction = new Instr_ParallelStart(instructionPointer, pram, expr, i);
                         instruction.InstructionString = lines[i];
-                        proc.Program.instructions.Add(instruction);
-                        instructionPointerParallel++;
+                        pram.MainProgram.instructions.Add(instruction);
+                        instructionPointer++;
                     }
-                    else
+                    else if (instr_ParallelEnd.IsMatch(lines[i]))
                     {
+                        parallel = false;
+                        match = instr_ParallelEnd.Match(lines[i]);
+                        Instr_ParallelEnd instruction = new Instr_ParallelEnd(instructionPointer, pram, i);
+                        instruction.InstructionString = lines[i];
+                        pram.MainProgram.instructions.Add(instruction);
+                        instructionPointer++;
+                    }
+                    else if (instr_GoTo.IsMatch(lines[i]))
+                    {
+                        match = instr_GoTo.Match(lines[i]);
+                        if (parallel)
+                        {
+                            //IExpresion expr = IdentifyExpression(pram, proc.Gateway, match.Groups[2].Value);
+                            string jumpLabel = match.Groups[2].Value;
+                            Expr_JumpLabel exprJump = new Expr_JumpLabel(jumpLabel, pram.Jumps);
+                            Instr_GoTo instruction = new Instr_GoTo(exprJump, i);
+                            instruction.InstructionString = lines[i];
+                            proc.Program.instructions.Add(instruction);
+                            instructionPointerParallel++;
+                        }
+                        else
+                        {
+                            //IExpresion expr = IdentifyExpression(pram, proc.Gateway, match.Groups[2].Value);
+                            string jumpLabel = match.Groups[2].Value;
+                            Expr_JumpLabel exprJump = new Expr_JumpLabel(jumpLabel, pram.Jumps);
+                            Instr_GoTo instruction = new Instr_GoTo(exprJump, i);
+                            instruction.InstructionString = lines[i];
+                            pram.MainProgram.instructions.Add(instruction);
+                            instructionPointer++;
+                        }
+                    }
+                    else if (instr_Halt.IsMatch(lines[i]))
+                    {
+                        match = instr_Halt.Match(lines[i]);
+                        if (parallel)
+                        {
+                            Instr_Halt instruction = new Instr_Halt(instructionPointerParallel, i);
+                            instruction.InstructionString = lines[i];
+                            proc.Program.instructions.Add(instruction);
+                            instructionPointerParallel++;
+                        }
+                        else
+                        {
+                            Instr_Halt instruction = new Instr_Halt(instructionPointer, i);
+                            instruction.InstructionString = lines[i];
+                            pram.MainProgram.instructions.Add(instruction);
+                            instructionPointer++;
+                        }
+                    }
+                    else if (instr_IfGoTo.IsMatch(lines[i]))
+                    {
+                        match = instr_IfGoTo.Match(lines[i]);
+                        if (parallel)
+                        {
+                            IExpresion expr = IdentifyExpression(pram, proc.Gateway, match.Groups[2].Value);
+                            string jumpLabel = match.Groups[4].Value;
+                            Expr_JumpLabel exprJump = new Expr_JumpLabel(jumpLabel, pram.Jumps);
+                            Instr_IfGoTo instruction = new Instr_IfGoTo(expr, exprJump, instructionPointerParallel, i);
+                            instruction.InstructionString = lines[i];
+                            proc.Program.instructions.Add(instruction);
+                            instructionPointerParallel++;
+                        }
+                        else
+                        {
+                            IExpresion expr = IdentifyExpression(pram, proc.Gateway, match.Groups[2].Value);
+                            string jumpLabel = match.Groups[4].Value;
+                            Expr_JumpLabel exprJump = new Expr_JumpLabel(jumpLabel, pram.Jumps);
+                            Instr_IfGoTo instruction = new Instr_IfGoTo(expr, exprJump, instructionPointer, i);
+                            instruction.InstructionString = lines[i];
+                            pram.MainProgram.instructions.Add(instruction);
+                            instructionPointer++;
+                        }
+                    }
+                    else if (instr_WriteExprToMem.IsMatch(lines[i]))
+                    {
+                        match = instr_WriteExprToMem.Match(lines[i]);
+                        IGateway gateway;
+                        if (match.Groups[1].Value[0] == 'L')
+                            gateway = proc.Gateway;
+                        else
+                            gateway = pram.sharedMemoryGateway;
+                        int gatewayIndex = int.Parse(match.Groups[1].Value.Substring(1));
                         IExpresion expr = IdentifyExpression(pram, proc.Gateway, match.Groups[2].Value);
-                        string jumpLabel = match.Groups[4].Value;
-                        Expr_JumpLabel exprJump = new Expr_JumpLabel(jumpLabel, pram.Jumps);
-                        Instr_IfGoTo instruction = new Instr_IfGoTo(expr, exprJump, instructionPointer, i);
-                        instruction.InstructionString = lines[i];
-                        pram.MainProgram.instructions.Add(instruction);
-                        instructionPointer++;
+                        if (parallel)
+                        {
+                            Instr_WriteExprToMem instruction = new Instr_WriteExprToMem(new MemoryGateway(gateway, gatewayIndex), instructionPointerParallel, expr, i);
+                            instruction.InstructionString = lines[i];
+                            proc.Program.instructions.Add(instruction);
+                            instructionPointerParallel++;
+                        }
+                        else
+                        {
+                            Instr_WriteExprToMem instruction = new Instr_WriteExprToMem(new MemoryGateway(gateway, gatewayIndex), instructionPointer, expr, i);
+                            instruction.InstructionString = lines[i];
+                            pram.MainProgram.instructions.Add(instruction);
+                            instructionPointer++;
+                        }
                     }
+                    else if (instr_WriteExprToPointer.IsMatch(lines[i]))
+                    {
+                        match = instr_WriteExprToPointer.Match(lines[i]);
+                        IGateway gateway;
+                        if (match.Groups[1].Value[0] == 'L')
+                            gateway = proc.Gateway;
+                        else
+                            gateway = pram.sharedMemoryGateway;
+                        IExpresion exprAddress = IdentifyExpression(pram, proc.Gateway, match.Groups[2].Value);
+                        IExpresion exprValue = IdentifyExpression(pram, proc.Gateway, match.Groups[3].Value);
+                        if (parallel)
+                        {
+                            Instr_WriteExprToPointerMultiMem instruction = new Instr_WriteExprToPointerMultiMem(new MemoryGateway(gateway, 0), instructionPointerParallel, exprAddress, exprValue, i);
+                            instruction.InstructionString = lines[i];
+                            proc.Program.instructions.Add(instruction);
+                            instructionPointerParallel++;
+                        }
+                        else
+                        {
+                            Instr_WriteExprToPointerMultiMem instruction = new Instr_WriteExprToPointerMultiMem(new MemoryGateway(gateway, 0), instructionPointer, exprAddress, exprValue, i);
+                            instruction.InstructionString = lines[i];
+                            pram.MainProgram.instructions.Add(instruction);
+                            instructionPointer++;
+                        }
+                    }
+                    else if (jump.IsMatch(lines[i]))
+                    {
+                        if (parallel)
+                        {
+                            pram.Jumps.Add(lines[i], instructionPointerParallel);
+                        }
+                        else
+                        {
+                            pram.Jumps.Add(lines[i], instructionPointer);
+                        }
+                    }
+                    else if (MemoryInput.IsMatch(lines[i]))
+                    {
+                        i++;
+                        while (MemoryInputValue.IsMatch(lines[i]))
+                        {
+                            match = MemoryInputValue.Match(lines[i]);
+                            int index = int.Parse(match.Groups[1].Value);
+                            int value = int.Parse(match.Groups[2].Value);
+                            pram.sharedMemory.Add(new MemCell(index, value));
+                            i++;
+                            if (i == lines.Length)
+                            {
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        throw new Exception();
+                    }
+                    pram.ParallelProgram = proc.Program;
+                    pram.Compiled = true;
                 }
-                else if (instr_WriteExprToMem.IsMatch(lines[i]))
+                catch (Exception e)
                 {
-                    match = instr_WriteExprToMem.Match(lines[i]);
-                    IGateway gateway;
-                    if (match.Groups[1].Value[0] == 'L')
-                        gateway = proc.Gateway;
-                    else
-                        gateway = pram.sharedMemoryGateway;
-                    int gatewayIndex = int.Parse(match.Groups[1].Value.Substring(1));
-                    IExpresion expr = IdentifyExpression(pram, proc.Gateway, match.Groups[2].Value);
-                    if (parallel)
-                    {
-                        Instr_WriteExprToMem instruction = new Instr_WriteExprToMem(new MemoryGateway(gateway, gatewayIndex), instructionPointerParallel, expr, i);
-                        instruction.InstructionString = lines[i];
-                        proc.Program.instructions.Add(instruction);
-                        instructionPointerParallel++;
-                    }
-                    else
-                    {
-                        Instr_WriteExprToMem instruction = new Instr_WriteExprToMem(new MemoryGateway(gateway, gatewayIndex), instructionPointer, expr, i);
-                        instruction.InstructionString = lines[i];
-                        pram.MainProgram.instructions.Add(instruction);
-                        instructionPointer++;
-                    }
+                    throw new Exception($"Compilation Error on line: {lines[i]}");
                 }
-                else if (instr_WriteExprToPointer.IsMatch(lines[i]))
+
+            }
+            if (pram.MemoryInputString != "")
+            {
+                string[] MemInputines = pram.MemoryInputString.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                foreach (string MemInput in MemInputines)
                 {
-                    match = instr_WriteExprToPointer.Match(lines[i]);
-                    IGateway gateway;
-                    if (match.Groups[1].Value[0] == 'L')
-                        gateway = proc.Gateway;
-                    else
-                        gateway = pram.sharedMemoryGateway;
-                    IExpresion exprAddress = IdentifyExpression(pram, proc.Gateway, match.Groups[2].Value);
-                    IExpresion exprValue = IdentifyExpression(pram, proc.Gateway, match.Groups[3].Value);
-                    if (parallel)
+                    if (MemoryInputValue.IsMatch(MemInput))
                     {
-                        Instr_WriteExprToPointerMultiMem instruction = new Instr_WriteExprToPointerMultiMem(new MemoryGateway(gateway, 0), instructionPointerParallel, exprAddress, exprValue, i);
-                        instruction.InstructionString = lines[i];
-                        proc.Program.instructions.Add(instruction);
-                        instructionPointerParallel++;
+                        match = MemoryInputValue.Match(MemInput);
+                        int index = int.Parse(match.Groups[1].Value);
+                        int value = int.Parse(match.Groups[2].Value);
+                        pram.sharedMemory.Add(new MemCell(index, value));
                     }
-                    else
-                    {
-                        Instr_WriteExprToPointerMultiMem instruction = new Instr_WriteExprToPointerMultiMem(new MemoryGateway(gateway, 0), instructionPointer, exprAddress, exprValue, i);
-                        instruction.InstructionString = lines[i];
-                        pram.MainProgram.instructions.Add(instruction);
-                        instructionPointer++;
-                    }
-                }
-                else if (jump.IsMatch(lines[i]))
-                {
-                    if (parallel)
-                    {
-                        pram.Jumps.Add(lines[i], instructionPointerParallel);
-                    }
-                    else
-                    {
-                        pram.Jumps.Add(lines[i], instructionPointer);
-                    }
-                }
-                else
-                {
-                    throw new Exception();
-                    //pram.CompilationError = true;
-                    //break;
                 }
             }
-            pram.ParallelProgram = proc.Program;
-            pram.Compiled = true;
+            pram.Compiled = true ;
         }
     }
 }

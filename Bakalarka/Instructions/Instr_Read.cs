@@ -6,22 +6,22 @@ using System.Threading.Tasks;
 
 namespace Bakalarka.Instructions
 {
-    public class Instr_Read : IInstruction
+    internal class Instr_Read : IInstruction
     {
-        public Instr_Read(int address) { this.address = address; }
+        public Instr_Read(MemoryGateway gateway, int address) { this.gateway = gateway;  this.address = address; }
         public int InstructionPointer { get; set; }
         public string InstructionString { get; set; }
         public int CodeLineIndex { get; set; }
+        MemoryGateway gateway;
         public int address;
-        public int value;
         public int Execute(int procID)
         {
-            return 1;
+            return gateway.Read(address);
         }
 
         public IInstruction Duplicate(LocalMemoryGateway localGateway)
         {
-            throw new NotImplementedException();
+            return new Instr_Read(gateway.Duplicate(localGateway), address);
         }
     }
 }

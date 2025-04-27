@@ -17,7 +17,12 @@ namespace Bakalarka.Expresions
             if (op == Operator.ADD) return gateway.Read() + value;
             if (op == Operator.SUB) return gateway.Read() - value;
             if (op == Operator.MUL) return gateway.Read() * value;
-            if (op == Operator.DIV) return gateway.Read() / value;
+            if (op == Operator.DIV)
+            {
+                if (value == 0)
+                    throw new Exception("Deleni nulou");
+                return gateway.Read() / value;
+            }
             if (op == Operator.MOD) return gateway.Read() % value;
             else throw new Exception("expression fail");
         }

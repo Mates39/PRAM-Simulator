@@ -17,6 +17,7 @@ namespace PramSimulator_WebApp
             builder.Services.AddSingleton<PRAM>();
             builder.Services.AddSingleton<Home>();
             builder.Services.AddSingleton<CodeService>();
+            builder.Services.AddSingleton<PramSimulatorService>();
 
             var app = builder.Build();
 

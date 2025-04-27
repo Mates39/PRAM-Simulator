@@ -1,34 +1,75 @@
 ﻿@page "/"
 @rendermode InteractiveServer
 @using Bakalarka
+@using PramSimulator_WebApp.Components.Services
+@using System.Threading;
+@using System.Threading.Tasks;
 @inject PRAM pram
 @inject NavigationManager Navigation
+@inject PramSimulatorService pramService
+
+
 
 <h1>Pram Simulator</h1>
-<p> Compiled: @pram.Compiled</p>
-<p>ParallelExecution: @pram.ParallelExecution</p>
-@if(pram.AccessType == 0)
+@if (Compiled)
 {
-	<p>PRAM varianta: CRCW_COMMON</p>
+	<div class="alert alert-success">Compiled</div>
 }
-@if (pram.AccessType == 1)
-{
-	<p>PRAM varianta: CRCW_ARBITRARY</p>
-}
-@if (pram.AccessType == 2)
-{
-	<p>PRAM varianta: CRCW_PRIORITY</p>
-}
-@if (pram.AccessType == 3)
-{
-	<p>PRAM varianta: CREW</p>
-}
-@if (pram.AccessType == 4)
-{
-	<p>PRAM varianta: EREW</p>
-}
+
+<div class="toolbar">
+	<div class="info">
+		<div class="info-item">
+			@if (pram.Compiled)
+			{
+				<span class="info-icon">✅</span>
+			}
+			else
+			{
+				<span class="info-icon">❌</span>
+			}
+			<span>Compiled: @pram.Compiled</span>
+		</div>
+		<div class="info-item">
+			<span class="info-icon">⚡</span>
+			<span>ParallelExecution: @pram.ParallelExecution</span>
+		</div>
+		<div class="info-item">
+			<span class="info-icon">🧠</span>
+			<span>
+				PRAM varianta:
+				@if (pram.AccessType == 0)
+				{
+					<span>CRCW_COMMON</span>
+				}
+				@if (pram.AccessType == 1)
+				{
+					<span>CRCW_ARBITRARY</span>
+				}
+				@if (pram.AccessType == 2)
+				{
+					<span>CRCW_PRIORITY</span>
+				}
+				@if (pram.AccessType == 3)
+				{
+					<span>CREW</span>
+				}
+				@if (pram.AccessType == 4)
+				{
+					<span>EREW</span>
+				}
+			</span>
+		</div>
+	</div>
+	<div class="ButtonsPanel">
+		<button class="btn btn-primary" @onclick="Compile">Compile</button>
+		<button class="btn btn-primary" @onclick="Restart">Restart</button>
+		<button class="btn btn-primary" @onclick="NextStep">NEXT</button>
+		<button class="btn btn-primary" @onclick="AutoRun">AutoRun</button>
+	</div>
+</div>
+
 <br/>
-<br />
+<br/>
 
 <div class="container">
 	<div class="row">
@@ -36,50 +77,44 @@
 			<div class="Code">
 				@if (pram.Compiled)
 				{
-					Code = pram.CodeString;
-					string[] lines = Code.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
 					<div class="CodeContainer">
-						@for (int i = 0; i < lines.Length; i++)
+						@foreach (var line in CodeLines)
 						{
-							if (i == pram.CurrentCodeLine)
-							{
-								<div class="CodeLine" style="background:red">
-									@lines[i]
-								</div>
-							}
-							else if (lines[i].StartsWith("#"))
-							{
-								<div class="CodeLine" style="color:darkgrey; font-style:italic">
-									@lines[i]
-								</div>
-							}
-							else if(lines[i].StartsWith(":"))
-							{
-								<div class="CodeLine" style="font-weight:bold">
-									@lines[i]
-								</div>
-							}
-							else
-							{
-								<div class="CodeLine">
-									@lines[i]
-								</div>
-							}
+							if (pram.CurrentCodeLine < 0)
+								pram.CurrentCodeLine = pram.MainProgram.instructions[pram.InstructionPointer].CodeLineIndex;
+							var isActive = line.Key == pram.CurrentCodeLine;
+							var isComment = line.Value.StartsWith("#");
+							var isLabel = line.Value.StartsWith(":");
+
+							if (line.Value.StartsWith("MEMORYINPUT"))
+								break;
+
+							var cssClass = "CodeLine";
+							if (isActive) cssClass += " Active";
+							else if (isComment) cssClass += " Comment";
+							else if (isLabel) cssClass += " Label";
+
+							<div class="@cssClass">
+								@if (!isComment && !isLabel && !string.IsNullOrWhiteSpace(line.Value))
+								{
+									<input type="checkbox" checked="@pram.Breakpoints.Contains(line.Key)" @onchange="() => ToggleBreakpoint(line.Key)" />
+								}
+								@line.Value
+							</div>
 						}
 					</div>
 				}
 				else
 				{
-					<textarea @bind="pram.CodeString" rows="10" cols="40" placeholder="Napiš kod..."></textarea>
+					<textarea class="editor" style="flex: 1;padding-right: 1rem;" @bind="pram.CodeString" rows="10" cols="40" placeholder="Napiš kod..."></textarea>
 				}
-
-				<button class="btn btn-primary" @onclick="NextStep">NExt</button>
-				<button class="btn btn-primary" @onclick="Compile">Compile</button>
-				<button class="btn btn-primary" @onclick="Restart">Restart</button>
 			</div>
 		</div>
 		<div class="col">
 			<div class="MemoryContainer">
+				<div class="ProcessorInfo">
+					<h5>Shared memory</h5>
+				</div>
 				<div class="MemoryView">
 					<table class="MemoryTable">
 						<thead>
@@ -103,28 +138,34 @@
 						</tbody>
 					</table>
 				</div>
-
-				<button class="btn btn-primary" @onclick="AddToSM">Add</button>
-				<button class="btn btn-primary" @onclick="RemoveFromSM">Remove</button>
+				<div class="MemoryButtons">
+					<button class="btn btn-primary" @onclick="AddToSM">Add</button>
+					<button class="btn btn-primary" @onclick="RemoveFromSM">Remove</button>
+				</div>
 			</div>
 		</div>
 	</div>	
 </div>
 
 
-
-
-@if (pram.Compiled)
-{
-	<div class="alert alert-success">Compiled</div>
-}
-
 @if (pram.CompilationError)
 {
 	<div class="ErrorMessageScreen"></div>
 	<div class="ErrorMessage">
 		<div class="text-center mb-3">
-			<span>Compilation Error</span>
+			<span>@pram.ErrorMessage</span>
+		</div>
+		<div class="text-center mt-3">
+			<button class="btn btn-primary" @onclick="CloseErrorMessage">Close</button>
+		</div>
+	</div>
+}
+@if (pram.MemoryIndexError)
+{
+	<div class="ErrorMessageScreen"></div>
+	<div class="ErrorMessage">
+		<div class="text-center mb-3">
+			<span>@pram.ErrorMessage</span>
 		</div>
 		<div class="text-center mt-3">
 			<button class="btn btn-primary" @onclick="CloseErrorMessage">Close</button>
@@ -144,23 +185,61 @@
 		</div>
 	</div>
 }
+@if (AlreadyCompiled)
+{
+	<div class="ErrorMessageScreen"></div>
+	<div class="ErrorMessage">
+		<div class="text-center mb-3">
+			<span>@pram.ErrorMessage</span>
+		</div>
+		<div class="text-center mt-3">
+			<button class="btn btn-primary" @onclick="() => AlreadyCompiled = false">Close</button>
+		</div>
+	</div>
+}
 
 
-
+@implements IDisposable
 @code {
+	private int num = 0;
+	private string Code;
+	private bool Compiled;
+	private Dictionary<int, string> CodeLines;
+	private Timer timer;
+	private bool AlreadyCompiled = false;
+
 	protected override async Task OnInitializedAsync()
 	{
-		//await Refresh();
+		CodeLines = new Dictionary<int, string>();
+		string[] lines = pram.CodeString.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+		@for (int i = 0; i < lines.Length; i++)
+		{
+			CodeLines.Add(i, lines[i]);
+		}
+		pramService.OnChanged += Update;
+		pramService.NavigationToParallel += NavigateParallel;
+		InvokeAsync(StateHasChanged);
+	}
+	private async void Update()
+	{
+		await InvokeAsync(StateHasChanged);
+	}
+	public void Dispose()
+	{
+		pramService.OnChanged -= Update;
+		pramService.NavigationToParallel -= NavigateParallel;
 	}
 	private async Task Restart()
 	{
 		pram.Restart();
 	}
-
-	private int num = 0;
-	private string hlaseni;
-	private string Code;
-	private bool Compiled;
+	private async void NavigateParallel()
+	{
+		await InvokeAsync(() =>
+		{
+			Navigation.NavigateTo("/parallel");
+		});
+	}
 	private void NextStep()
 	{
 		if(pram.Compiled)
@@ -181,20 +260,47 @@
 		}
 		StateHasChanged();
 	}
+	private void AutoRun()
+	{
+		pramService.AutoRun(pram);
+	}
+	private async Task HideMessageAfterDelay()
+	{
+		await Task.Delay(2000);
+		Compiled = false;
+		StateHasChanged();
+	}
+
 	private void Compile()
 	{
 		try
 		{
-			pram.CodeCompiler.Compile(pram, pram.CodeString);
-			num = pram.MainProgram.instructions.Count;
-			hlaseni = "Compiled";
+			if (pram.Compiled)
+				throw new NotImplementedException("Program uz je zkompilovan");
+			if (pram.CodeString == "")
+				throw new Exception("Prazdny kod");
+			Code = pram.CodeString;
+			pram.CodeCompiler.Compile(pram);
 			Compiled = pram.Compiled;
+			_ = HideMessageAfterDelay();
+			CodeLines = new Dictionary<int, string>();
+			string[] lines = Code.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+			@for (int i = 0; i < lines.Length; i++)
+			{
+				CodeLines.Add(i, lines[i]);
+			}
 			pram.CurrentCodeLine = pram.ParallelExecution ? pram.Processors[0].Program.instructions[pram.Processors[0].InstructionPointer].CodeLineIndex : pram.MainProgram.instructions[pram.InstructionPointer].CodeLineIndex;
 			InvokeAsync(StateHasChanged);
+		}
+		catch(NotImplementedException e)
+		{
+			AlreadyCompiled = true;
+			pram.ErrorMessage = e.Message;
 		}
 		catch(Exception e)
 		{
 			pram.CompilationError = true;
+			pram.ErrorMessage = e.Message;
 		}
 	}
 	private void AddToSM()
@@ -213,6 +319,14 @@
 	}
 	private void CloseHaltedMessage()
 	{
-		
+		pram.Halted = false;
+	}
+	private void ToggleBreakpoint(int lineIndex)
+	{
+		if (pram.Breakpoints.Contains(lineIndex))
+			pram.Breakpoints.Remove(lineIndex);
+		else
+			pram.Breakpoints.Add(lineIndex);
+
 	}
 }
