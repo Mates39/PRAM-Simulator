@@ -112,11 +112,19 @@
     }
     private void LoadProgram(KeyValuePair<string, string> program)
     {
-        pram.CodeString = "";
-        pram.MemoryInputString = "";
-        pram.CodeString = program.Value;
-        pram.CodeCompiler.Compile(pram);
-        Navigation.NavigateTo("/");
+        try
+        {
+            pram.CodeString = "";
+            pram.MemoryInputString = "";
+            pram.CodeString = program.Value;
+            pram.CodeCompiler.Compile(pram);
+            Navigation.NavigateTo("/");
+        }
+        catch(Exception e)
+        {
+            pram.LoadingFileError = true;
+            pram.ErrorMessage = e.Message;
+        }
     }
     private async Task LoadProgram()
     {

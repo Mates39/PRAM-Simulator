@@ -37,8 +37,21 @@ namespace Bakalarka
         public Regex expr_Comparision = new Regex(@"^([SL]\d+)\s(==|!=|<=|>=|<|>)\s([SL]\d+|\d+)$");
 
         public Regex jump = new Regex(@"^(:[a-zA-Z][a-zA-Z0-9]+)$");
+
+        private bool ParallelCheck {  get; set; }
+        private bool ParallelHaltCheck {  get; set; }
+        private bool HaltCheck {  get; set; }
         public CodeCompiler()
         {
+            ParallelCheck = false;
+            ParallelHaltCheck = false;
+            HaltCheck = false;
+        }
+        private void ErrorClear()
+        {
+            ParallelCheck = false;
+            ParallelHaltCheck = false;
+            HaltCheck = false;
         }
         public IExpresion IdentifyExpression(PRAM pram, LocalMemoryGateway lmg, string input)
         {
@@ -140,12 +153,14 @@ namespace Bakalarka
         public void Compile(PRAM pram)
         {
             pram.Restart();
+            ErrorClear();
             Processor proc = pram.Processors[0];
             string[] lines = pram.CodeString.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
             bool parallel = false;
             Match match;
             int instructionPointer = 0;
             int instructionPointerParallel = 0;
+            HaltCheck = true;
             for (int i = 0; i < lines.Count(); i++)
             {
                 try
@@ -161,6 +176,8 @@ namespace Bakalarka
                     }
                     if (instr_ParallelStart.IsMatch(lines[i]))
                     {
+                        ParallelCheck = true;
+                        ParallelHaltCheck = true;
                         parallel = true;
                         match = instr_ParallelStart.Match(lines[i]);
                         IExpresion expr = IdentifyExpression(pram, proc.Gateway, match.Groups[2].Value);
@@ -171,6 +188,7 @@ namespace Bakalarka
                     }
                     else if (instr_ParallelEnd.IsMatch(lines[i]))
                     {
+                        ParallelCheck = false;
                         parallel = false;
                         match = instr_ParallelEnd.Match(lines[i]);
                         Instr_ParallelEnd instruction = new Instr_ParallelEnd(instructionPointer, pram, i);
@@ -207,6 +225,7 @@ namespace Bakalarka
                         match = instr_Halt.Match(lines[i]);
                         if (parallel)
                         {
+                            ParallelHaltCheck = false;
                             Instr_Halt instruction = new Instr_Halt(instructionPointerParallel, i);
                             instruction.InstructionString = lines[i];
                             proc.Program.instructions.Add(instruction);
@@ -214,6 +233,7 @@ namespace Bakalarka
                         }
                         else
                         {
+                            HaltCheck = false;
                             Instr_Halt instruction = new Instr_Halt(instructionPointer, i);
                             instruction.InstructionString = lines[i];
                             pram.MainProgram.instructions.Add(instruction);
@@ -326,7 +346,6 @@ namespace Bakalarka
                         throw new Exception();
                     }
                     pram.ParallelProgram = proc.Program;
-                    pram.Compiled = true;
                 }
                 catch (Exception e)
                 {
@@ -348,6 +367,12 @@ namespace Bakalarka
                     }
                 }
             }
+            if (ParallelCheck)
+                throw new Exception("Nespravne ukonceny paralelni beh");
+            if (ParallelHaltCheck)
+                throw new Exception("V paralelnim behu chybi halt instrukce");
+            if (HaltCheck)
+                throw new Exception("V hlavnim behu chybi halt instrukce");
             pram.Compiled = true ;
         }
     }

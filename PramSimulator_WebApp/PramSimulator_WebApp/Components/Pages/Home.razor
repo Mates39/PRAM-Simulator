@@ -247,6 +247,16 @@
 			if (pram.ParallelExecution)
 			{
 				int i = pram.ExecuteNextParallelStep();
+				if (!pram.ParallelExecution)
+					pram.CurrentCodeLine++;
+				foreach (var p in pram.ActiveProcessors)
+				{
+					if (p.Running)
+					{
+						pram.CurrentCodeLine = pram.ParallelExecution ? p.Program.instructions[p.InstructionPointer].CodeLineIndex : pram.MainProgram.instructions[pram.InstructionPointer].CodeLineIndex;
+						break;
+					}
+				}
 			}
 			else
 			{
@@ -254,8 +264,16 @@
 				if(pram.ParallelExecution == true)
 					Navigation.NavigateTo("/parallel");
 			}
-			if(pram.InstructionPointer >= 0)
-				pram.CurrentCodeLine = pram.ParallelExecution ? pram.Processors[0].Program.instructions[pram.Processors[0].InstructionPointer].CodeLineIndex : pram.MainProgram.instructions[pram.InstructionPointer].CodeLineIndex;
+			if (pram.InstructionPointer >= 0)
+			{
+				if(pram.ParallelExecution)
+				{
+					var activeProc = pram.ActiveProcessors.First((x) => x.Running);
+					pram.CurrentCodeLine =  activeProc.Program.instructions[activeProc.InstructionPointer].CodeLineIndex;
+				}
+				else
+					pram.CurrentCodeLine = pram.MainProgram.instructions[pram.InstructionPointer].CodeLineIndex;
+			}
 
 		}
 		StateHasChanged();

@@ -11,6 +11,8 @@ namespace Bakalarka
         Memory memory { get; set; }
         int Read(int index)
         {
+            if (memory.memory.Count <= index)
+                throw new Exception("Cteni z indexu, ktery neexistuje");
             return memory.memory[index].Value;
         }
         void Write(int index, int value, int procID)
