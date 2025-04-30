@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Bakalarka.Expresions;
 using Bakalarka.Instructions;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.VisualBasic;
 
 
 namespace Bakalarka
@@ -36,6 +37,7 @@ namespace Bakalarka
         public CodeCompiler CodeCompiler { get; set; }
         public bool ParallelExecution { get; set; }
         public  bool Compiled { get; set; } 
+        public int InstructionCounter { get; set; }
         public int AccessType { get; set; } = PRAM_ACCESS_TYPE.CRCW_C;
         public int CurrentCodeLine { get; set; }
         public string CodeString { get; set; }
@@ -72,7 +74,7 @@ namespace Bakalarka
             MemoryIndexError = false;
             Halted = false;
             Breakpoints = new HashSet<int>();
-
+            InstructionCounter = 0;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -99,7 +101,6 @@ namespace Bakalarka
             foreach (Processor p in ActiveProcessors)
             {
                 p.InstructionPointer = 0;
-                p.CurrentCodeLine = CurrentCodeLine + 1;
                 p.Running = true;
             }
             ParallelExecution = true;
@@ -125,6 +126,7 @@ namespace Bakalarka
                 try
                 {
                     InstructionPointer = this.MainProgram.instructions[InstructionPointer].Execute(0);
+                    InstructionCounter++;
                 }
                 catch (Exception e)
                 {
@@ -149,7 +151,7 @@ namespace Bakalarka
             }
         }
 
-        public int ExecuteNextParallelStep()
+        public async void ExecuteNextParallelStep()
         {
             int halted = 0;
             foreach (Processor p in ActiveProcessors)
@@ -159,6 +161,7 @@ namespace Bakalarka
                     try
                     {
                         p.ExecuteNextInstruction();
+                        InstructionCounter++;
                         if (p.Running == false)
                             halted++;
                     }
@@ -175,14 +178,14 @@ namespace Bakalarka
                 ParallelExecution = false;
             try
             {
-                sharedMemory.MemoryAccessCheck(AccessType);
-                return 1;
+                await sharedMemory.MemoryAccessCheck(AccessType);
+                //return 1;
             }
-            catch
+            catch(Exception)
             {
                 MemoryAccessError = true;
-                return -1;
             }
+            //return 1;
         }
         public void Restart()
         {
@@ -196,7 +199,16 @@ namespace Bakalarka
             Jumps.Clear();
             MainProgram.instructions.Clear();
             ClearErrors();
-
+            InstructionCounter = 0;
+        }
+        public void Reset()
+        {
+            Halted = false;
+            InstructionPointer = 0;
+            CurrentCodeLine = -1;
+            ParallelExecution = false;
+            ClearErrors();
+            InstructionCounter = 0;
         }
         private void ClearErrors()
         {

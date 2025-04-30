@@ -28,7 +28,7 @@ namespace Bakalarka.Instructions
         }
         public IInstruction Duplicate(LocalMemoryGateway localGateway)
         {
-            return new Instr_GoTo(address, CodeLineIndex);
+            return new Instr_GoTo(Expresion.Duplicate(localGateway), CodeLineIndex);
         }
     }
 }

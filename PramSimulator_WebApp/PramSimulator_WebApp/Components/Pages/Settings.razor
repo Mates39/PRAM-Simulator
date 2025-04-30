@@ -117,6 +117,7 @@
             pram.CodeString = "";
             pram.MemoryInputString = "";
             pram.CodeString = program.Value;
+            pram.sharedMemory.memory.Clear();
             pram.CodeCompiler.Compile(pram);
             Navigation.NavigateTo("/");
         }
@@ -139,6 +140,7 @@
                 throw new Exception("Spatna struktura souboru");
             }
             pram.CodeString = blocks.ElementAt(0);
+            pram.sharedMemory.memory.Clear();
             pram.MemoryInputString = blocks.ElementAt(1);
             pram.CodeCompiler.Compile(pram);
             Navigation.NavigateTo("/");

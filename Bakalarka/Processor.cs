@@ -49,22 +49,5 @@ namespace Bakalarka
                     Running = false;
             }
         }
-
-        public void Info()
-        {
-            Console.WriteLine("Processor ID: " + Id);
-            Console.WriteLine("Instruction Pointer: " + InstructionPointer);
-            if(InstructionPointer >= 0)
-                Console.WriteLine("Instruction: " + Program.instructions[InstructionPointer]);
-            else
-                Console.WriteLine("Instruction: HALT");
-            Console.Write("Local Memory: ");
-            foreach (MemCell i in LocalMemory.memory)
-            {
-                Console.Write(i.Value + " ");
-            }
-            Console.WriteLine();
-
-        }
     }
 }

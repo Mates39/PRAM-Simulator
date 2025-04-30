@@ -13,15 +13,13 @@ namespace Bakalarka
     {
         public ObservableCollection<MemCell> memory { get; set; }
         public List<MemoryAccess> MemoryAccesses { get; set; }
-        public Memory(ObservableCollection<MemCell> mem) { this.memory = mem; }
+        public string ErrorMessage { get; set; }
+        public Func<IGrouping<int, MemoryAccess>, Task<int>>? OnArbitraryConflictResolved;
+        public event PropertyChangedEventHandler? PropertyChanged;
         public Memory() { 
             this.memory = new ObservableCollection<MemCell>();
             this.MemoryAccesses = new List<MemoryAccess>();
         }
-        public string ErrorMessage { get; set; }
-        public Func<IGrouping<int, MemoryAccess>, Task<int>>? OnArbitraryConflictResolved;
-
-        public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -144,7 +142,33 @@ namespace Bakalarka
             }
             else if (variant == PRAM_ACCESS_TYPE.CREW)
             {
-                
+                var accesses = MemoryAccesses.GroupBy(x => x.memoryIndex);
+                foreach (var item in accesses)
+                {
+                    if (item.Count() > 1)
+                    {
+                        MemoryAccesses.Clear();
+                        StringBuilder sb = new StringBuilder();
+                        sb.AppendLine("Poruseni varianty CRCW_COMMON");
+                        foreach (var value in item)
+                        {
+                            sb.AppendLine($"procesor {value.processorID} zapisoval do pameti na pozici {value.memoryIndex} hodnotu: {value.value}");
+                        }
+                        ErrorMessage = sb.ToString();
+                        throw new Exception();
+                    }
+                    var it = item.First();
+                    if (it.memoryIndex >= memory.Count)
+                    {
+                        for (int i = memory.Count; i <= it.memoryIndex; i++)
+                        {
+                            memory.Add(new MemCell(i, 0));
+                        }
+                    }
+                    var mem = memory.FirstOrDefault(x => x.Index == it.memoryIndex);
+                    if (mem != null) { mem.Value = it.value; }
+                }
+                MemoryAccesses.Clear();
             }
             else if (variant == PRAM_ACCESS_TYPE.EREW)
             {
@@ -154,6 +178,13 @@ namespace Bakalarka
                     if (item.Count() > 1)
                     {
                         MemoryAccesses.Clear();
+                        StringBuilder sb = new StringBuilder();
+                        sb.AppendLine("Poruseni varianty CRCW_COMMON");
+                        foreach (var value in item)
+                        {
+                            sb.AppendLine($"procesor {value.processorID} zapisoval do pameti na pozici {value.memoryIndex} hodnotu: {value.value}");
+                        }
+                        ErrorMessage = sb.ToString();
                         throw new Exception();
                     }
                     var it = item.First();

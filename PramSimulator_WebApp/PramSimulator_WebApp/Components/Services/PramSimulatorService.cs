@@ -41,7 +41,7 @@ namespace PramSimulator_WebApp.Components.Services
             if (!AutoRunning) return;
             var pram = (PRAM)state;
             var CurrentLine = pram.CurrentCodeLine;
-            if(!pram.Breakpoints.Contains(CurrentLine))
+            if(!pram.Breakpoints.Contains(CurrentLine) && !pram.Halted)
             {
                 if(pram.ParallelExecution)
                 {

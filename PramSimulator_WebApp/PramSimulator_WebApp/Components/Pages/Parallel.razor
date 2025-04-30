@@ -45,9 +45,14 @@
 				}
 			</span>
 		</div>
+		<div class="info-item">
+			<span class="info-icon">⚡</span>
+			<span>Instructions count: @pram.InstructionCounter</span>
+		</div>
 	</div>
 	<div class="ButtonsPanel">
 		<button class="btn btn-primary" @onclick="Restart">Restart</button>
+		<button class="btn btn-primary" @onclick="Reset">Reset</button>
 		<button class="btn btn-primary" @onclick="NextStep">NEXT</button>
 	</div>
 </div>
@@ -227,6 +232,10 @@
 		{
 			CodeLines.Add(i, lines[i]);
 		}
+		@foreach(var proc in pram.ActiveProcessors)
+		{
+			proc.CurrentCodeLine = pram.CurrentCodeLine;
+		}
 		pram.sharedMemory.OnArbitraryConflictResolved = ShowConflictSelection;
 		pramService.NavigationToHome += NavigateHome;
 		StateHasChanged();
@@ -250,6 +259,14 @@
 	private async Task Restart()
 	{
 		pram.Restart();
+		pramService.StopAutoRun();
+		Navigation.NavigateTo("/");
+	}
+	private async Task Reset()
+	{
+		pram.Reset();
+		pramService.StopAutoRun();
+		Navigation.NavigateTo("/");
 	}
 	private void NextStep()
 	{
@@ -257,11 +274,11 @@
 		{
 			if (pram.ParallelExecution)
 			{
-				int i = pram.ExecuteNextParallelStep();
+				pram.ExecuteNextParallelStep();
 				if(!pram.ParallelExecution)
 				{
 					pram.ExecuteNextInstruction();
-					pram.CurrentCodeLine++;
+					pram.CurrentCodeLine = pram.MainProgram.instructions[pram.InstructionPointer].CodeLineIndex;
 					Navigation.NavigateTo("/");
 				}
 			}
@@ -269,8 +286,6 @@
 			{
 				pram.ExecuteNextInstruction();
 			}
-			if (!pram.ParallelExecution)
-				pram.CurrentCodeLine++;
 			foreach(var p in pram.ActiveProcessors)
 			{
 				if(p.Running)

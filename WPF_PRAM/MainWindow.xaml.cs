@@ -76,7 +76,7 @@ namespace WPF_PRAM
             TextRange textRange = new TextRange(TextBox_Code.Document.ContentStart, TextBox_Code.Document.ContentEnd.GetPositionAtOffset(-1));
             string fullText = textRange.Text;
             string text = fullText.TrimEnd();
-            pram.CodeCompiler.Compile(pram, text);
+            pram.CodeCompiler.Compile(pram);
             MessageBox.Show("Compilation successful");
             pram.Compiled = true;
         }

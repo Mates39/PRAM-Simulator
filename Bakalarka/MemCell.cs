@@ -20,10 +20,8 @@ namespace Bakalarka
                 OnPropertyChanged(nameof(Value));
             }
         }
-
-        public MemCell(int index, int value) { this.Index = index; this.Value = value; }
-
         public event PropertyChangedEventHandler? PropertyChanged;
+        public MemCell(int index, int value) { this.Index = index; this.Value = value; }
         protected void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

@@ -59,10 +59,15 @@
 				}
 			</span>
 		</div>
+		<div class="info-item">
+			<span class="info-icon">⚡</span>
+			<span>Instructions count: @pram.InstructionCounter</span>
+		</div>
 	</div>
 	<div class="ButtonsPanel">
 		<button class="btn btn-primary" @onclick="Compile">Compile</button>
 		<button class="btn btn-primary" @onclick="Restart">Restart</button>
+		<button class="btn btn-primary" @onclick="Reset">Reset</button>
 		<button class="btn btn-primary" @onclick="NextStep">NEXT</button>
 		<button class="btn btn-primary" @onclick="AutoRun">AutoRun</button>
 	</div>
@@ -232,6 +237,12 @@
 	private async Task Restart()
 	{
 		pram.Restart();
+		pramService.StopAutoRun();
+	}
+	private async Task Reset()
+	{
+		pram.Reset();
+		pramService.StopAutoRun();
 	}
 	private async void NavigateParallel()
 	{
@@ -246,7 +257,7 @@
 		{
 			if (pram.ParallelExecution)
 			{
-				int i = pram.ExecuteNextParallelStep();
+				pram.ExecuteNextParallelStep();
 				if (!pram.ParallelExecution)
 					pram.CurrentCodeLine++;
 				foreach (var p in pram.ActiveProcessors)
@@ -260,9 +271,12 @@
 			}
 			else
 			{
-				int i = pram.ExecuteNextInstruction();
+				pram.ExecuteNextInstruction();
 				if(pram.ParallelExecution == true)
+				{
+					pram.CurrentCodeLine = pram.MainProgram.instructions[pram.InstructionPointer].CodeLineIndex;
 					Navigation.NavigateTo("/parallel");
+				}
 			}
 			if (pram.InstructionPointer >= 0)
 			{
